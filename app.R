@@ -97,18 +97,20 @@ server <- function(input, output, session) {
       
       column_names <- colnames(df_out)
       type_col <- sapply(df_out,class)
+      distinct_val <- sapply(df_out, function(x) toString(unique(x)[1:5]))
       mean_sd_col <- sapply(df_out,is.factor)
       
     } else{
       
       column_names <- colnames(df_out)
       type_col <- sapply(df_out,class)
-      mean_sd_col <- is.character(df_out)
+      distinct_val <- sapply(df_out, function(x) toString(unique(x)))
+      mean_sd_col <- sapply(df_out,is.factor)
     }
-    
-    
-    df <- data.frame(column_names, type_col, mean_sd_col)
 
+    df <- data.frame(column_names, type_col, distinct_val, mean_sd_col)
+    
+    #colnames(df) = c("Column Name",	"Type", "Mean (sd) or Distinct Values", "temp vals")
     return(df)
   }
 
