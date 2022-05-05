@@ -56,7 +56,48 @@ ui <- fluidPage(
           ),
         )
       )
+    ),
+    tabPanel(
+      "Counts",
+      sidebarLayout(
+        sidebarPanel(fileInput(
+          "count_file",
+          label = "Load Normalized counts matrix",
+          accept = c(
+            "text/csv",
+            "text/comma-separated-values,text/plain",
+            ".csv"
+          ),
+          placeholder = "GSE64810_mlhd_DESeq2_norm_counts_adjust.csv"
+        ), 
+        sliderInput(
+          "variance_slider",
+          "Select the percentile of variance:",
+          min = -300,
+          max = 0,
+          value = -150,
+          step = 1
+        ),
+        sliderInput(
+          "non_zero_slider",
+          "Select the number of the samples that are non-zero:",
+          min = -300,
+          max = 0,
+          value = -150,
+          step = 1
+        )),
+        mainPanel(
+          tabsetPanel(
+            id = "tabsetPanelID",
+            type = "tabs",
+            tabsetPanel(
+              tabPanel("Summary"), tabPanel("Diagnostic Scatter Plot"), tabPanel("Clustered Heatmap"),tabPanel("PCA")
+            )
+          ),
+        )
+      )
     )
+    
   )
 )
 
@@ -64,8 +105,10 @@ ui <- fluidPage(
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
   options(shiny.maxRequestSize = 35 * 1024^2)
-
-  #' load_Data
+  
+  ############### Load Data ####################
+  
+  #' Load Sammple Data
   #'
   #' @details Okay this one is a little weird but bear with me here. This is
   #' still a "function", but it will take no arguments. The `reactive({})` bit
@@ -83,7 +126,23 @@ server <- function(input, output, session) {
     
     return(data)
   })
+  
+  #' Load Counts Data
+  #'
+  #' @details Okay this one is a little weird but bear with me here. This is 
+  #' still a "function", but it will take no arguments. The `reactive({})` bit 
+  #' says "if any of my inputs (as in, input$...) are changed, run me again". 
+  #' This is useful when a user clicks a new button or loads a new file. In 
+  #' our case, look for the uploaded file's datapath argument and load it with 
+  #' read.csv. Return this data frame in the normal return() style.
+  load_count_data <- reactive({
+    df <- read.csv(input$count_file$datapath)
+    colnames(df)[1] <- "gene"
+    return(df)
+  })
 
+  ############### Functions ####################
+  
   #' Draw summary table
   #'
   #' @param dataf Data frame loaded by load_data()
@@ -152,7 +211,8 @@ server <- function(input, output, session) {
     return(p)
   }
 
-  # Sample Summary Table
+  ############### Output ####################
+  
   output$samp_sum_table <- renderTable(
     {
       req(input$sample_metadata)
