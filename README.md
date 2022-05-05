@@ -17,7 +17,7 @@ Shiny Functionalities:
 	
   - [x] Tab with a data table displaying the sample information, with sortable columns
 
-  - [ ] Tab with histograms, density plots, or violin plots of continuous variables.
+  - [x] Tab with histograms, density plots, or violin plots of continuous variables.
 
 If you want to make it fancy, allow the user to choose which column to plot and another column to group by!
 
