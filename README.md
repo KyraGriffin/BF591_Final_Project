@@ -15,7 +15,7 @@ Shiny Functionalities:
 
   - [ ] Tab with a summary of the table that includes a summary of the type and values in each column, e.g.: Number of rows: X Number of columns: Y
 	
-  - [ ] Tab with a data table displaying the sample information, with sortable columns
+  - [x] Tab with a data table displaying the sample information, with sortable columns
 
   - [ ] Tab with histograms, density plots, or violin plots of continuous variables.
 
