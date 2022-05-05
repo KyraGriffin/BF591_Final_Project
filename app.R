@@ -5,13 +5,15 @@
 
 # Welcome to R Shiny. All that glitters is not gold.
 library(shiny)
-library(vtable)
+library(DT)
 library(tidyverse)
 library(bslib)
 library(ggplot2)
 library(colourpicker)
 
 dataset_choice <- c("Neurologically normal", "Huntington's Disease")
+sample_y_choice <- c("age_of_death", "AvgSpotLen","Bases","Bytes","mrna.seq_reads","pmi","rin",
+                     "age_of_onset","cag","Duration","h.v_cortical_score","h.v_striatal_score","vonsattel_grade")
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -42,8 +44,14 @@ ui <- fluidPage(
             type = "tabs",
             tabsetPanel(
               tabPanel("Summary", tableOutput("samp_sum_table")),
-              tabPanel("Table"),
-              tabPanel("Plots")
+              tabPanel("Table", DT::dataTableOutput("sample_DT")),
+              tabPanel("Plots", radioButtons(
+                inputId = "samp_y_axis",
+                inline = TRUE,
+                label = "Choose the y-axis",
+                choices = sample_y_choice,
+                selected = "age_of_death"
+              ),plotOutput("sample_plot"))
             )
           ),
         )
@@ -109,9 +117,39 @@ server <- function(input, output, session) {
     }
 
     df <- data.frame(column_names, type_col, distinct_val, mean_sd_col)
-    
     #colnames(df) = c("Column Name",	"Type", "Mean (sd) or Distinct Values", "temp vals")
     return(df)
+  }
+  
+  #' Draw sample plot
+  #'
+  #' @param dataf Data frame loaded by load_data()
+  #' @param diagnosis Diagnosis of sample row from the radio button input.
+  #'
+  #' @return Data frame
+  #'
+  #' @details I would suggest the function
+  #' `formatC()`
+  #'
+  #' @examples draw_sum_table(sample_metadata, "Neurologically normal")
+  draw_sample_plot <- function(dataf, y_val) {
+    df_out <- dataf 
+    hd <- c("age_of_onset","cag","Duration","h.v_cortical_score","h.v_striatal_score","vonsattel_grade")
+    
+    plot_data <- df_out %>% dplyr::select(where(is.numeric))
+    plot_data <- plot_data %>%
+      add_column(Diagnosis = df_out$Diagnosis)
+    
+    if(y_val %in% hd){
+      plot_data <- plot_data %>% dplyr::filter(Diagnosis == "Huntington's Disease")
+    }
+    
+    p <- ggplot(plot_data, aes(x = Diagnosis, y = !!sym(y_val), fill=Diagnosis))+ # aes(x = !!sym(x_name), y = !!sym(y_name)
+      geom_violin()
+      theme_bw() + 
+      theme(legend.position = "bottom")
+    
+    return(p)
   }
 
   # Sample Summary Table
@@ -123,6 +161,28 @@ server <- function(input, output, session) {
     },
     striped = T
   )
+  
+  output$sample_DT <- DT::renderDataTable({
+    req(input$sample_metadata)
+    table <- load_sample_data()
+    table <- table %>% 
+      dplyr::filter(Diagnosis == input$diagnosis_samp)
+    if(input$diagnosis_samp == 'Neurologically normal'){
+      table <- table %>%
+        dplyr::select(-c(age_of_onset, cag, Duration, h.v_cortical_score,h.v_striatal_score,vonsattel_grade)) 
+    }
+    DT::datatable(table, options = list(orderClasses = TRUE))
+  })
+  
+  output$sample_plot <- renderPlot(
+    {
+      req(input$sample_metadata)
+      table <- load_sample_data()
+      if(!is.null(table)){
+        draw_sample_plot(table, 
+                   input$samp_y_axis)}})
+  
+  
 }
 
 # Run the application
