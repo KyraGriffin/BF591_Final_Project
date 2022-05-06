@@ -94,7 +94,7 @@ ui <- fluidPage(
             tabsetPanel(
               tabPanel("Summary", tableOutput("count_sum_table")), 
               tabPanel("Diagnostic Scatter Plot", splitLayout(cellWidths = c("50%", "50%"), plotOutput("mean_vs_var_plot"), plotOutput("mean_vs_zeros"))), 
-              tabPanel("Clustered Heatmap"),
+              tabPanel("Clustered Heatmap", plotOutput("count_heatmap")),
               tabPanel("PCA")
             )
           ),
@@ -271,6 +271,11 @@ server <- function(input, output, session) {
     return(mv_plot)
   }
 
+  plot_heatmap <- function(de_intensity, num_colors, palette) {
+    col.pal <- RColorBrewer::brewer.pal(num_colors, palette)
+    return(heatmap(de_intensity, col=col.pal))
+  }
+
   ############### Output ####################
   
   output$samp_sum_table <- renderTable(
@@ -319,6 +324,8 @@ server <- function(input, output, session) {
         plot_variance_vs_mean(table, 
                              input$variance_slider,
                              input$non_zero_slider)}})
+  
+  output$count_heatmap
   
   
 }
