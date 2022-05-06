@@ -235,20 +235,35 @@ server <- function(input, output, session) {
     num_samples <- NCOL(count_data)
     #total number of genes
     total_genes <- length(count_data$gene)
-    #number and % of genes passing current filter
-    var_vals <- apply(count_data[,-c(1)], 1, var)
-    # non-zero filter : 
+    
+    # Filter data based on variance percentile and nonzeros
     nonzero_genes <- rowSums(count_data[-1])>= zero_val
     nonzero_counts <- count_data[nonzero_genes,]
+    zero_counts <- filter(count_data, !gene %in% nonzero_counts$gene)
+    nonzero_counts$variance <- apply(nonzero_counts[,-c(1)], 1, var)
     
-    zero_counts <- count_data %>% dplyr::filter()
+    percent = quantile(nonzero_counts$variance, prob = var_val / 100)
     
-    num_pass <- length(nonzero_counts)
+    var_counts <- dplyr::filter(nonzero_counts, variance >= percent) %>% 
+      select(-variance)
+    
+    #number and % of genes passing current filter
+    num_pass <- length(var_counts$gene)
+    n1 <- round((num_pass / total_genes) * 100, 2)
+    pass <- c(num_pass, n1)
+    num_pass <- toString(pass, width = 30)
+    
     #number and % of genes not passing current filter
-    num_not_pass <- length(zero_counts
-                            )
+    np <- length(zero_counts$gene) + (length(nonzero_counts$gene) - length(var_counts$gene))
+    n2 <- round(((np / total_genes) * 100), 2)
+    not_pass <- c(np,n2)
+    
+    num_not_pass <- toString(not_pass, width = 30)
+
     df <- data.frame(num_samples, total_genes, num_pass, num_not_pass)
-    #colnames(df) = c("Column Name",	"Type", "Mean (sd) or Distinct Values", "temp vals")
+    colnames(df) = c("Number of Samples",	"Total Number of Genes", 
+                     "Number , % of genes passing the filter", 
+                     "Number , % of genes not passing the filter")
     return(df)
   }
   
@@ -325,7 +340,7 @@ server <- function(input, output, session) {
                              input$variance_slider,
                              input$non_zero_slider)}})
   
-  output$count_heatmap
+  #output$count_heatmap
   
   
 }
