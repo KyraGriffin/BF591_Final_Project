@@ -73,30 +73,38 @@ ui <- fluidPage(
         sliderInput(
           "variance_slider",
           "Select the percentile of variance:",
-          min = -300,
-          max = 0,
-          value = -150,
+          min = 0,
+          max = 100,
+          value = 50,
           step = 1
         ),
         sliderInput(
           "non_zero_slider",
           "Select the number of the samples that are non-zero:",
-          min = -300,
-          max = 0,
-          value = -150,
+          min = 0,
+          max = 100,
+          value = 50,
           step = 1
-        )),
+        ),
+        actionButton(inputId = "count_button", label = "Submit")),
         mainPanel(
           tabsetPanel(
             id = "tabsetPanelID",
             type = "tabs",
             tabsetPanel(
-              tabPanel("Summary"), tabPanel("Diagnostic Scatter Plot"), tabPanel("Clustered Heatmap"),tabPanel("PCA")
+              tabPanel("Summary", tableOutput("count_sum_table")), 
+              tabPanel("Diagnostic Scatter Plot", splitLayout(cellWidths = c("50%", "50%"), plotOutput("mean_vs_var_plot"), plotOutput("mean_vs_zeros"))), 
+              tabPanel("Clustered Heatmap"),
+              tabPanel("PCA")
             )
           ),
         )
       )
     )
+    
+    
+    
+    
     
   )
 )
@@ -136,7 +144,7 @@ server <- function(input, output, session) {
   #' our case, look for the uploaded file's datapath argument and load it with 
   #' read.csv. Return this data frame in the normal return() style.
   load_count_data <- reactive({
-    df <- read.csv(input$count_file$datapath)
+    df <- read_tsv(input$count_file$datapath, show_col_types = FALSE)
     colnames(df)[1] <- "gene"
     return(df)
   })
@@ -210,6 +218,58 @@ server <- function(input, output, session) {
     
     return(p)
   }
+  
+  #' Draw count summary table
+  #'
+  #' @param dataf Data frame loaded by load_data()
+  #' @param diagnosis Diagnosis of sample row from the radio button input.
+  #'
+  #' @return Data frame
+  #'
+  #' @details I would suggest the function
+  #' `formatC()`
+  #'
+  #' @examples draw_sum_table(sample_metadata, "Neurologically normal")
+  draw_count_sum_table <- function(count_data, var_val, zero_val) {
+    #number of samples
+    num_samples <- NCOL(count_data)
+    #total number of genes
+    total_genes <- length(count_data$gene)
+    #number and % of genes passing current filter
+    var_vals <- apply(count_data[,-c(1)], 1, var)
+    # non-zero filter : 
+    nonzero_genes <- rowSums(count_data[-1])>= zero_val
+    nonzero_counts <- count_data[nonzero_genes,]
+    
+    zero_counts <- count_data %>% dplyr::filter()
+    
+    num_pass <- length(nonzero_counts)
+    #number and % of genes not passing current filter
+    num_not_pass <- length(zero_counts
+                            )
+    df <- data.frame(num_samples, total_genes, num_pass, num_not_pass)
+    #colnames(df) = c("Column Name",	"Type", "Mean (sd) or Distinct Values", "temp vals")
+    return(df)
+  }
+  
+  plot_variance_vs_mean <- function(data, var_val, zero_val, scale_y_axis=FALSE, title="Median Read Counts and Variability Over All Genes") {
+    medians <- apply(data[,-c(1)], 1, median)
+    variances <- apply(data[,-c(1)], 1, var)
+    
+    plot_data <- tibble::tibble(median=medians, variance=variances)
+    plot_data$rank <- rank(plot_data$median)
+    
+    mv_plot <- ggplot2::ggplot(plot_data, aes(x=rank, y=variance)) +
+      ggplot2::geom_point(alpha=0.5) +
+      ggplot2::geom_smooth(method='gam', formula = y ~ s(x, bs = "cs")) +
+      ggplot2::xlab("Rank(Median)") +
+      ggplot2::ylab("Variance") +
+      ggplot2::ggtitle(title)
+    if (scale_y_axis) {
+      mv_plot <- mv_plot + ggplot2::scale_y_log10()
+    }
+    return(mv_plot)
+  }
 
   ############### Output ####################
   
@@ -241,6 +301,24 @@ server <- function(input, output, session) {
       if(!is.null(table)){
         draw_sample_plot(table, 
                    input$samp_y_axis)}})
+  
+  output$count_sum_table <- renderTable(
+    {
+      req(input$count_file)
+      table <- load_count_data()
+      if(!is.null(table)){
+        draw_count_sum_table(table, 
+                       input$variance_slider,
+                       input$non_zero_slider)}})
+  
+  output$mean_vs_var_plot <- renderPlot(
+    {
+      req(input$count_file)
+      table <- load_count_data()
+      if(!is.null(table)){
+        plot_variance_vs_mean(table, 
+                             input$variance_slider,
+                             input$non_zero_slider)}})
   
   
 }
