@@ -6,6 +6,7 @@
 # Welcome to R Shiny. All that glitters is not gold.
 library(shiny)
 library(DT)
+library(pheatmap)
 library(tidyverse)
 library(bslib)
 library(ggplot2)
@@ -83,7 +84,7 @@ ui <- fluidPage(
           "Select the number of the samples that are non-zero:",
           min = 0,
           max = 100,
-          value = 50,
+          value = 0,
           step = 1
         ),
         actionButton(inputId = "count_button", label = "Submit")),
@@ -93,7 +94,7 @@ ui <- fluidPage(
             type = "tabs",
             tabsetPanel(
               tabPanel("Summary", tableOutput("count_sum_table")), 
-              tabPanel("Diagnostic Scatter Plot", splitLayout(cellWidths = c("50%", "50%"), plotOutput("mean_vs_var_plot"), plotOutput("mean_vs_zeros"))), 
+              tabPanel("Diagnostic Scatter Plot", splitLayout(cellWidths = c("50%", "50%"), plotOutput("median_vs_var_plot"), plotOutput("median_vs_zeros"))), 
               tabPanel("Clustered Heatmap", plotOutput("count_heatmap")),
               tabPanel("PCA")
             )
@@ -237,7 +238,7 @@ server <- function(input, output, session) {
     total_genes <- length(count_data$gene)
     
     # Filter data based on variance percentile and nonzeros
-    nonzero_genes <- rowSums(count_data[-1])>= zero_val
+    nonzero_genes <- rowSums(count_data[-1] == 0)>= zero_val
     nonzero_counts <- count_data[nonzero_genes,]
     zero_counts <- filter(count_data, !gene %in% nonzero_counts$gene)
     nonzero_counts$variance <- apply(nonzero_counts[,-c(1)], 1, var)
@@ -267,28 +268,92 @@ server <- function(input, output, session) {
     return(df)
   }
   
-  plot_variance_vs_mean <- function(data, var_val, zero_val, scale_y_axis=FALSE, title="Median Read Counts and Variability Over All Genes") {
-    medians <- apply(data[,-c(1)], 1, median)
-    variances <- apply(data[,-c(1)], 1, var)
+  
+  #' Draw count summary table
+  #'
+  #' @param dataf Data frame loaded by load_data()
+  #' @param diagnosis Diagnosis of sample row from the radio button input.
+  #'
+  #' @return Data frame
+  #'
+  #' @details I would suggest the function
+  #' `formatC()`
+  #'
+  #' @examples draw_sum_table(sample_metadata, "Neurologically normal")
+  filter_count_data <- function(count_data, var_val, zero_val) {
+
+    # Filter data based on variance percentile and nonzeros
+    nonzero_genes <- rowSums(count_data[-1] == 0)>= zero_val
+    nonzero_counts <- count_data[nonzero_genes,]
     
-    plot_data <- tibble::tibble(median=medians, variance=variances)
+    zero_counts <- filter(count_data, !gene %in% nonzero_counts$gene)
+    nonzero_counts$variance <- apply(nonzero_counts[,-c(1)], 1, var)
+    
+    percent = quantile(nonzero_counts$variance, prob = var_val / 100)
+    var_counts <- dplyr::filter(nonzero_counts, variance >= percent) %>% 
+      select(-variance)
+    not_var_counts <- filter(nonzero_counts, !gene %in% var_counts$gene) %>% 
+      select(-variance)
+    
+    not_filtered <- rbind(zero_counts, not_var_counts) %>% mutate(volcano = "Not Filtered")
+    filtered <- var_counts %>% mutate(volcano = "Filtered")
+    
+    data <- rbind(filtered, not_filtered)
+    
+
+    return(data)
+  }
+  
+  var_volcano_plot <-function(data,x_lab, y_lab, title) {
+    dt <- data %>% select(-volcano)
+    medians <- apply(dt[,-c(1)], 1, median)
+    variances <- apply(dt[,-c(1)], 1, var)
+    
+    plot_data <- tibble::tibble(median=medians, variance=variances, volcano = data$volcano)
     plot_data$rank <- rank(plot_data$median)
     
-    mv_plot <- ggplot2::ggplot(plot_data, aes(x=rank, y=variance)) +
-      ggplot2::geom_point(alpha=0.5) +
-      ggplot2::geom_smooth(method='gam', formula = y ~ s(x, bs = "cs")) +
-      ggplot2::xlab("Rank(Median)") +
-      ggplot2::ylab("Variance") +
-      ggplot2::ggtitle(title)
-    if (scale_y_axis) {
-      mv_plot <- mv_plot + ggplot2::scale_y_log10()
-    }
-    return(mv_plot)
+    p <- ggplot(plot_data, aes(x=rank, y=variance)) +
+      geom_point(aes(color = volcano)) + 
+      scale_color_manual(values = c("#F8766D","#619CFF")) + 
+      theme_bw() +
+      ggplot2::xlab(x_lab) +
+      ggplot2::ylab(y_lab) +
+      ggtitle(title)
+    theme(legend.position = "bottom")
+    
+    return(p)
   }
-
-  plot_heatmap <- function(de_intensity, num_colors, palette) {
-    col.pal <- RColorBrewer::brewer.pal(num_colors, palette)
-    return(heatmap(de_intensity, col=col.pal))
+  
+  
+  zero_volcano_plot <-function(data,x_lab, y_lab, title) {
+    dt <- data %>% select(-volcano)
+    medians <- apply(dt[,-c(1)], 1, median)
+    num_zero <- rowSums(dt[,-c(1)] == 0)
+    
+    plot_data <- tibble::tibble(median=medians, zeros=num_zero, volcano = data$volcano)
+    plot_data$rank <- rank(plot_data$median)
+    
+    p <- ggplot(plot_data, aes(x=rank, y=zeros)) +
+      geom_point(aes(color = volcano)) + 
+      scale_color_manual(values = c("#F8766D","#619CFF")) + 
+      theme_bw() +
+      ggplot2::xlab(x_lab) +
+      ggplot2::ylab(y_lab) +
+      ggtitle(title)
+      theme(legend.position = "bottom")
+          
+      return(p)
+  }
+  
+  
+  
+  plot_heatmap <- function(data_filtered, title) {
+    d <- as.matrix(data_filtered[, -1])
+    #rownames(d) <- data_filtered$gene
+    col.pal <- RColorBrewer::brewer.pal(3, "YlOrRd")
+    h <- heatmap(d, col=col.pal, main = title)
+    
+    return(h)
   }
 
   ############### Output ####################
@@ -331,16 +396,54 @@ server <- function(input, output, session) {
                        input$variance_slider,
                        input$non_zero_slider)}})
   
-  output$mean_vs_var_plot <- renderPlot(
+  output$median_vs_var_plot <- renderPlot(
     {
       req(input$count_file)
       table <- load_count_data()
       if(!is.null(table)){
-        plot_variance_vs_mean(table, 
-                             input$variance_slider,
-                             input$non_zero_slider)}})
+        data <- filter_count_data(table,
+                                  input$variance_slider,
+                                  input$non_zero_slider)
+        var_volcano_plot(data,
+                         "Rank(Median)",
+                         "Variance",
+                         "Median Read Counts and Variability Over All Genes")}})
   
-  #output$count_heatmap
+  
+  output$median_vs_zeros <- renderPlot(
+    {
+      req(input$count_file)
+      table <- load_count_data()
+      if(!is.null(table)){
+      data <- filter_count_data(table,
+                                input$variance_slider,
+                                input$non_zero_slider)
+      zero_volcano_plot(data,
+                   "Rank(Median)",
+                  "Number of Zeros",
+                  "Median Read Counts and Number of Zeros Over All Genes")}})
+  
+  output$count_heatmap <- renderPlot(
+    {
+      req(input$count_file)
+      table <- load_count_data()
+      if(!is.null(table)){
+        data <- filter_count_data(table,
+                                  input$variance_slider,
+                                  input$non_zero_slider)}
+      
+        data <- data %>% dplyr::filter(volcano == "F") %>% 
+          select(-volcano)
+        
+        d <- as.matrix(data[,-1])
+        rownames(d) <- data$gene
+        col.pal <- RColorBrewer::brewer.pal(3, "YlOrRd")
+        
+        heatmap(d,
+                col = col.pal, 
+                main = "Clustered Heatmap of Counts Remaining After Filtering")
+})
+
   
   
 }
