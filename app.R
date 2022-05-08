@@ -10,6 +10,7 @@ library(pheatmap)
 library(tidyverse)
 library(bslib)
 library(ggplot2)
+library(plotly)
 library(colourpicker)
 
 dataset_choice <- c("Neurologically normal", "Huntington's Disease")
@@ -145,7 +146,7 @@ server <- function(input, output, session) {
   #' our case, look for the uploaded file's datapath argument and load it with 
   #' read.csv. Return this data frame in the normal return() style.
   load_count_data <- reactive({
-    df <- read_tsv(input$count_file$datapath, show_col_types = FALSE)
+    df <- read_tsv(input$count_file$datapath, col_names = TRUE, show_col_types = FALSE)
     colnames(df)[1] <- "gene"
     return(df)
   })
@@ -298,7 +299,7 @@ server <- function(input, output, session) {
     not_filtered <- rbind(zero_counts, not_var_counts) %>% mutate(volcano = "Not Filtered")
     filtered <- var_counts %>% mutate(volcano = "Filtered")
     
-    data <- rbind(filtered, not_filtered)
+    data <- as.data.frame(rbind(filtered, not_filtered))
     
 
     return(data)
@@ -345,15 +346,14 @@ server <- function(input, output, session) {
       return(p)
   }
   
-  
-  
   plot_heatmap <- function(data_filtered, title) {
-    d <- as.matrix(data_filtered[, -1])
-    #rownames(d) <- data_filtered$gene
+    data <- as.matrix(data_filtered, nrow = NROW(data_filtered), ncol = NCOL(data_filtered))
     col.pal <- RColorBrewer::brewer.pal(3, "YlOrRd")
-    h <- heatmap(d, col=col.pal, main = title)
+    print(data)
     
-    return(h)
+    
+    return(heatmap(data, col = col.pal,
+                   main ="Clustered Heatmap of Counts Remaining After Filtering"))
   }
 
   ############### Output ####################
@@ -432,17 +432,14 @@ server <- function(input, output, session) {
                                   input$variance_slider,
                                   input$non_zero_slider)}
       
-        data <- data %>% dplyr::filter(volcano == "F") %>% 
-          select(-volcano)
+        data <- tibble::as_tibble(data) %>% dplyr::filter(volcano == "F") %>% 
+          select(-volcano) %>% 
+          column_to_rownames(var = "gene")
+        data <- as.data.frame(data)
         
-        d <- as.matrix(data[,-1])
-        rownames(d) <- data$gene
-        col.pal <- RColorBrewer::brewer.pal(3, "YlOrRd")
         
-        heatmap(d,
-                col = col.pal, 
-                main = "Clustered Heatmap of Counts Remaining After Filtering")
-})
+        t <- "Clustered Heatmap of Counts Remaining After Filtering"
+        plot_heatmap(data, t)})
 
   
   
