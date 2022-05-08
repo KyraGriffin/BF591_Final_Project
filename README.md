@@ -31,9 +31,9 @@ Inputs:
   - Slider to include genes with at least X samples that are non-zero
  
 Shiny Functionalities:
-  - [ ] Tab with text or a table summarizing the effect of the filtering, including: number of samples, total number of genes, number and % of genes passing current filter, number and % of genes not passing current filter
-  - [ ] Tab with diagnostic scatter plots, where genes passing filters are marked in a darker color, and genes filtered out are lighter: median count vs variance (consider log scale for plot), median count vs number of zeros
-  - [ ] Tab with a clustered heatmap of counts remaining after filtering - consider enabling log-transforming counts for visualization be sure to include a color bar in the legend
+  - [x] Tab with text or a table summarizing the effect of the filtering, including: number of samples, total number of genes, number and % of genes passing current filter, number and % of genes not passing current filter
+  - [x] Tab with diagnostic scatter plots, where genes passing filters are marked in a darker color, and genes filtered out are lighter: median count vs variance (consider log scale for plot), median count vs number of zeros
+  - [x] Tab with a clustered heatmap of counts remaining after filtering - consider enabling log-transforming counts for visualization be sure to include a color bar in the legend
   - [ ] Tab with a scatter plot of principal component analysis projections. You may either: allow the user to select which principal components to plot in a scatter plot (e.g. PC1 vs PC2), allow the user to plot the top N principal components as a beeswarm plot, be sure to include the % variance explained by each component in the plot labels
 
 #### 12.5.3 Differential Expression
