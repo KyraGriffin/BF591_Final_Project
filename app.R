@@ -111,8 +111,8 @@ ui <- fluidPage(
                        radioButtons("pc_button", "",
                                     c("PC vs PC", "Beeswarm Plot")),
                        h5("If you choose PC vs PC please enter the numbers of the two principle components you want to plot below:"),
-                       textInput("PC1", label = h6("First PC"), value = "..."),
-                       textInput("PC2", label = h6("Second PC"), value = "..."),
+                       textInput("PC1", label = h6("First PC"), value = "...", width = 50),
+                       textInput("PC2", label = h6("Second PC"), value = "...", width = 70),
                        plotOutput("count_pca"))
             )
           ),
@@ -460,6 +460,24 @@ server <- function(input, output, session) {
         t <- "Clustered Heatmap of Counts Remaining After Filtering"
         plot_heatmap(data, t)
         }}, height = 700, width = 900)
+  
+  output$count_pca <- renderPlot(
+    {
+      req(input$count_file)
+      table <- load_count_data()
+      if(!is.null(table)){
+        data <- filter_count_data(table,
+                                  input$variance_slider,
+                                  input$non_zero_slider)
+        
+      if(input$pc_button == "PC vs PC" && input$PC1 != "..." && input$PC2 != "..."){
+        plot_pc_v_pc(data, input$PC1, input$PC2)
+      }
+      else
+      {
+        plot_pca_beeswarm(data)
+      }
+    }})
   
   
   # observe({
