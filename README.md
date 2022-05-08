@@ -49,6 +49,33 @@ Shiny Functionalities:
 Optional: enable gene name search functionality to filter rows of table
   - [ ] Tab with content similar to that described in Assignment 7
 
-#### 12.6 Choose-your-own Adventure
-Implement one or more of the following components as part of your app.
+#### 12.6.1 Gene Set Enrichment Analysis
+Use your differential gene expression results to compute gene set enrichment analysis with fgsea. You will need to identify an appropriate gene set database that matches the organism studied in your dataset.
+
+Input:
+  - a table of fgsea results from the differential expression data.
+  	- choose an appropriate ranking metric (log fold change, -log(pvalue), etc) from your differential expression results
+  	- run fgsea with appropriate parameters against gene set database of your choice
+  	- save the results to a CSV/TSV
+  	- file upload button
+
+Shiny Functionalities:
+  - [ ] Tab 1:
+  	- Sidebar:
+  		- Slider to adjust number of top pathways to plot by adjusted p-value
+  	- Main Panel:
+  		- Barplot of fgsea NES for top pathways selected by slider
+  			- Optional: Click on barplot for pathway to display table entry
+  - [ ] Tab 2:
+  	- Sidebar:
+  		- Slider to filter table by adjusted p-value (Reactive)
+  		- Radio buttons to select all, positive or negative NES pathways
+  		- Download button to export current filtered and displayed table results
+  	- Main panel:
+  		- Sortable data table displaying the results
+  - [ ] Tab 3:
+  	- Sidebar:
+  		- Slider to filter table by adjusted p-value (Reactive)
+  	- Main panel:
+  		- Scatter plot of NES on x-axis and -log10 adjusted p-value on y-axis, with gene sets below threshold in grey color
 
