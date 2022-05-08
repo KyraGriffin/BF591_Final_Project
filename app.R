@@ -6,16 +6,20 @@
 # Welcome to R Shiny. All that glitters is not gold.
 library(shiny)
 library(DT)
-library(pheatmap)
+library(plotly)
+library(heatmaply)
 library(tidyverse)
 library(bslib)
 library(ggplot2)
 library(plotly)
 library(colourpicker)
+#install.packages('shinyHeatmaply')
 
 dataset_choice <- c("Neurologically normal", "Huntington's Disease")
-sample_y_choice <- c("age_of_death", "AvgSpotLen","Bases","Bytes","mrna.seq_reads","pmi","rin",
-                     "age_of_onset","cag","Duration","h.v_cortical_score","h.v_striatal_score","vonsattel_grade")
+sample_y_choice <- c("age_of_death", "AvgSpotLen","Bases","Bytes",
+                     "mrna.seq_reads","pmi","rin","age_of_onset","cag",
+                     "Duration","h.v_cortical_score","h.v_striatal_score",
+                     "vonsattel_grade")
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -94,9 +98,13 @@ ui <- fluidPage(
             id = "tabsetPanelID",
             type = "tabs",
             tabsetPanel(
-              tabPanel("Summary", tableOutput("count_sum_table")), 
-              tabPanel("Diagnostic Scatter Plot", splitLayout(cellWidths = c("50%", "50%"), plotOutput("median_vs_var_plot"), plotOutput("median_vs_zeros"))), 
-              tabPanel("Clustered Heatmap", plotOutput("count_heatmap")),
+              tabPanel("Summary", br(), tableOutput("count_sum_table")), 
+              tabPanel("Diagnostic Scatter Plot", br(),
+                       splitLayout(cellWidths = c("50%", "50%"), 
+                                   plotOutput("median_vs_var_plot"), 
+                                   plotOutput("median_vs_zeros"))), 
+              tabPanel("Clustered Heatmap",  br(),
+                       plotOutput("count_heatmap")),
               tabPanel("PCA")
             )
           ),
@@ -347,13 +355,20 @@ server <- function(input, output, session) {
   }
   
   plot_heatmap <- function(data_filtered, title) {
-    data <- as.matrix(data_filtered, nrow = NROW(data_filtered), ncol = NCOL(data_filtered))
-    col.pal <- RColorBrewer::brewer.pal(3, "YlOrRd")
-    print(data)
+    d_filter <- data_filtered %>% dplyr::filter(volcano != "Not Filtered") %>% 
+      select(-volcano) %>% 
+      column_to_rownames(var = "gene")
     
+    print(select_if(d_filter, is.numeric))
     
-    return(heatmap(data, col = col.pal,
-                   main ="Clustered Heatmap of Counts Remaining After Filtering"))
+    p <- heatmap(as.matrix(d_filter), 
+                 margins = c(5,5), 
+                 main = title,
+                 cexRow =0.7,
+                 cexCol = 0.7)
+    #p <- heatmaply::heatmaply(as.matrix(d_filter))
+    
+    return(p)
   }
 
   ############### Output ####################
@@ -394,7 +409,8 @@ server <- function(input, output, session) {
       if(!is.null(table)){
         draw_count_sum_table(table, 
                        input$variance_slider,
-                       input$non_zero_slider)}})
+                       input$non_zero_slider)}}, spacing = "m",
+    bordered = T)
   
   output$median_vs_var_plot <- renderPlot(
     {
@@ -430,16 +446,12 @@ server <- function(input, output, session) {
       if(!is.null(table)){
         data <- filter_count_data(table,
                                   input$variance_slider,
-                                  input$non_zero_slider)}
+                                  input$non_zero_slider)
       
-        data <- tibble::as_tibble(data) %>% dplyr::filter(volcano == "F") %>% 
-          select(-volcano) %>% 
-          column_to_rownames(var = "gene")
-        data <- as.data.frame(data)
-        
         
         t <- "Clustered Heatmap of Counts Remaining After Filtering"
-        plot_heatmap(data, t)})
+        plot_heatmap(data, t)
+        }}, height = 700, width = 900)
 
   
   
