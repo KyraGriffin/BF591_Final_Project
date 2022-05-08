@@ -105,7 +105,15 @@ ui <- fluidPage(
                                    plotOutput("median_vs_zeros"))), 
               tabPanel("Clustered Heatmap",  br(),
                        plotOutput("count_heatmap")),
-              tabPanel("PCA")
+              tabPanel("PCA",
+                       h5("Select PC vs PC or Beeswarm to plot either two principle components or 
+                          all the principle components together in a Beeswarm Plot:"),
+                       radioButtons("pc_button", "",
+                                    c("PC vs PC", "Beeswarm Plot")),
+                       h5("If you choose PC vs PC please enter the numbers of the two principle components you want to plot below:"),
+                       textInput("PC1", label = h6("First PC"), value = "..."),
+                       textInput("PC2", label = h6("Second PC"), value = "..."),
+                       plotOutput("count_pca"))
             )
           ),
         )
@@ -452,8 +460,20 @@ server <- function(input, output, session) {
         t <- "Clustered Heatmap of Counts Remaining After Filtering"
         plot_heatmap(data, t)
         }}, height = 700, width = 900)
-
   
+  
+  # observe({
+  #   x <- input$pc_button
+  #   
+  #   # Can also set the label and select items
+  #   if(x == "Item B"){
+  #   updateRadioButtons(session, "pc_button2",
+  #                      label = paste("radioButtons label", x),
+  #                      choices = c("new choice", "second new choice")
+  #   )}
+  # })
+  
+
   
 }
 
