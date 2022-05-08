@@ -378,6 +378,43 @@ server <- function(input, output, session) {
     
     return(p)
   }
+  
+  plot_pc_v_pc <- function(filtered_data, metadata, PC_1, PC_2) {
+    
+    filtered_data <- filtered_data %>% #dplyr::filter(volcano == "Filtered") %>% 
+      select(-volcano) %>% 
+      column_to_rownames(var = "gene")
+    
+    print(select_if(filtered_data, is.numeric))
+    
+    pca <- prcomp(t(filtered_data))
+    plot_data <- metadata
+    
+    pc_1 <- as.numeric(PC_1)  
+    pc_2 <- as.numeric(PC_2)  
+    
+    
+    plot_data$PC1 <- pca$x[ , pc_1]
+    plot_data$PC2 <- pca$x[ , pc_2]
+    percent_var <- pca$sdev^2 / sum( pca$sdev^2 )
+    
+    title <- (paste0("PC", pc_1, ": ",round(percent_var[pc_1] * 100),"% variance", " Vs. ",
+                     "PC", pc_2, ": ",round(percent_var[pc_2] * 100),"% variance"))
+    
+    pca_plot <- ggplot(plot_data, aes(x=PC1, y=PC2, col=Diagnosis)) +
+      geom_point() +
+      xlab(paste0("PC", pc_1, ": ",round(percent_var[pc_1] * 100),"% variance ")) +
+      ylab(paste0("PC", pc_2, ": ",round(percent_var[pc_2] * 100),"% variance")) +
+      ggtitle(title)
+    
+    return(pca_plot)
+  }
+  
+  plot_pca_beeswarm <- function(){}
+    
+    
+    
+    
 
   ############### Output ####################
   
@@ -471,11 +508,12 @@ server <- function(input, output, session) {
                                   input$non_zero_slider)
         
       if(input$pc_button == "PC vs PC" && input$PC1 != "..." && input$PC2 != "..."){
-        plot_pc_v_pc(data, input$PC1, input$PC2)
+        metadata <- read.csv(file = "data/sample_metadata.csv", header=TRUE, stringsAsFactors = TRUE)
+        plot_pc_v_pc(data, metadata, input$PC1, input$PC2)
       }
-      else
+      else if(input$pc_button == "Beeswarm Plot")
       {
-        plot_pca_beeswarm(data)
+        plot_pca_beeswarm()
       }
     }})
   
