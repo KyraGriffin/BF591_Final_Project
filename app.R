@@ -8,6 +8,7 @@ library(shiny)
 library(DT)
 library(plotly)
 library(heatmaply)
+library(shinythemes)
 library(tidyverse)
 library(bslib)
 library(ggplot2)
@@ -22,7 +23,13 @@ sample_y_choice <- c("age_of_death", "AvgSpotLen","Bases","Bytes",
                      "vonsattel_grade")
 
 # Define UI for application that draws a histogram
-ui <- fluidPage(
+ui <- fluidPage(theme = shinytheme("lumen"),
+                 tags$head(
+                   tags$style(HTML("
+                  .btn {
+                    height: 37px;
+                    width: 100px;}"))
+                 ),
   titlePanel("BF591 Final Project"),
   tabsetPanel(
     tabPanel(
