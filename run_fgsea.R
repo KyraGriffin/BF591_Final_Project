@@ -1,3 +1,16 @@
+## Author: Kyra Griffin
+## ke31grif@bu.edu
+## BU BF591
+## BF591 Final Project
+
+##### File Summary #####
+# This R file contains functions and the functiona calls to take in deseq results 
+# and labels the genes based on a pre-set padj threshold of 0.10 and runs fgsea 
+# on the data.
+# 
+# At the bottom of this R file the fgsea results are written to a csv file 
+# that is used in the app.R in this project.
+
 library('tidyverse')
 library('SummarizedExperiment')
 library('DESeq2')
@@ -83,7 +96,7 @@ run_gsea <- function(labeled_results, min_size, max_size) {
 }
 
 
-########## FUNCTION CALL ##############
+########## FUNCTION CALLS ##############
 
 deseq_data <- read_tsv("data/GSE64810_mlhd_DESeq2_diffexp_DESeq2_outlier_trimmed_adjust.csv", 
                        col_names = TRUE,
@@ -95,12 +108,9 @@ labeled_results %>%
   arrange(padj) %>% 
   relocate(genes, volc_plot_status, log2FoldChange, padj)
 
-########## FUNCTION CALL ##############
 
 fgsea_results <- run_gsea(labeled_results, 15, 500)
 fgsea_results
 fgsea_results <- write_csv(fgsea_results, "data/fgsea.csv")
-
-####################
 
 ####################

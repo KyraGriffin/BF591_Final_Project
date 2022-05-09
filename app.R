@@ -23,13 +23,15 @@ library(colourpicker)
 # devtools::install_github("thomasp85/patchwork")
 # install.packages("gplots")
 
+
+# Radio Button Choices
 dataset_choice <- c("Neurologically normal", "Huntington's Disease")
+
 sample_y_choice <- c(
   "age_of_death", "AvgSpotLen", "Bases", "Bytes",
   "mrna.seq_reads", "pmi", "rin", "age_of_onset", "cag",
   "Duration", "h.v_cortical_score", "h.v_striatal_score",
-  "vonsattel_grade"
-)
+  "vonsattel_grade")
 
 deseq_choices <-
   c("baseMean", "log2FoldChange", "lfcSE", "stat", "pvalue", "padj")
@@ -44,10 +46,14 @@ ui <- fluidPage(
                     height: 37px;
                     width: 100px;}"))
   ),
-  titlePanel("BF591 Final Project"),
+  titlePanel("BF591 Final Project - Kyra Griffin"),
   tabsetPanel(
     tabPanel(
       "Samples",
+      p("In this set of tabs we will be focusing on the metadata of the dataset. 
+        On the side there is a file input that allows you to enter the sample metadata
+        and choose which diagnosis you want to specifically look at."),
+      br(),
       sidebarLayout(
         sidebarPanel(
           fileInput(
@@ -73,9 +79,22 @@ ui <- fluidPage(
         ),
         mainPanel(
           tabsetPanel(
-            tabPanel("Summary", tableOutput("samp_sum_table")),
-            tabPanel("Table", DT::dataTableOutput("sample_DT")),
-            tabPanel("Plots", radioButtons(
+            tabPanel("Summary", 
+                     p("The summary tab shows a summary table of the entire sample metadata with the column name, 
+        type of the column, and either the mean(sd) or the distict values within a column.
+        This table is also sorted but the diagnosis chosen."),br(),
+                     tableOutput("samp_sum_table")),
+            tabPanel("Table", 
+                     p("The table tab shows a sortable and searchable data table of the entire 
+                     sample metadata.This table is also sorted but the diagnosis chosen."),br(),
+                     DT::dataTableOutput("sample_DT")),
+            tabPanel("Plots", 
+                     p("The plots tab shows violin plots of continuous variables within the sample metadata. 
+                       These plots are not filtered by the diagnosis but when you chose age_of_onset,
+                       cag,Duration, h.v_cortical_score, h.v_striatal_score, or vonsattel_grade only one
+                       representation shows because these categories or values are only present for the 
+                       patients with Huntington's Disease"),br(),
+                     radioButtons(
               inputId = "samp_y_axis",
               inline = TRUE,
               label = "Choose the y-axis",
@@ -87,7 +106,10 @@ ui <- fluidPage(
       )
     ),
     tabPanel(
-      "Counts",
+      "Counts",p("The Counts focuses on the normalized conts matrix. 
+                 The side panel has a file upload area as well as two sliders 
+                 for the user to chose the percentaile of variance and the 
+                 number of non-zero samples a gene can contain."),br(),
       sidebarLayout(
         sidebarPanel(
           fileInput(
@@ -124,9 +146,16 @@ ui <- fluidPage(
         ),
         mainPanel(
           tabsetPanel(
-            tabPanel("Summary", br(), tableOutput("count_sum_table")),
+            tabPanel("Summary", br(),p("The summary tab shows a summary table of
+                                       the number of samples total, the total number of genes, 
+                                       the total number and the percentage of genes that pass 
+                                       and that do not pass the filtering set by the sliders."),br(),
+                     tableOutput("count_sum_table")),
             tabPanel(
               "Diagnostic Scatter Plot", br(),
+              p("The Diagnostic Scatter Plot tab shows two plots,median count vs variance and 
+              median count vs number of zeros, where genes passing filters are marked in a darker 
+              color, and genes filtered out are lighter."),br(),
               splitLayout(
                 cellWidths = c("50%", "50%"),
                 plotOutput("median_vs_var_plot"),
@@ -135,10 +164,15 @@ ui <- fluidPage(
             ),
             tabPanel(
               "Clustered Heatmap", br(),
+              p("The Clustered Heatmap tab shows a clustered heatmap of counts remaining after 
+                filtering, with a color bar located at the top left and the sample names on 
+                the x-axis and the genes on the y-axis"),br(),
               plotOutput("count_heatmap")
             ),
             tabPanel(
               "PCA",
+              p("The PCA tab shows either two principle components plotted against one 
+                another or two Beeswarm plots of the top two PCs grouped by the diagnosis they represent."),br(),
               h4("Select PC vs PC or Beeswarm to plot either two principle components against
               one another or the top 2 principle components in Beeswarm Plots:"),
               radioButtons(
@@ -156,6 +190,10 @@ ui <- fluidPage(
     ),
     tabPanel(
       "DE",
+      p("The Differential Expression or DE tab focuses on the deseq results. 
+        The side bar takes the deseq results as input and allows the user to 
+        choose the x and y-axis, as well as the colors and the magnitude of the 
+        adjusted p-value for the volcano plot that will be produced in the Plot tab."),br(),
       sidebarLayout(
         sidebarPanel(
           fileInput(
@@ -217,15 +255,27 @@ ui <- fluidPage(
         # Show the volcano plot
         mainPanel(
           tabsetPanel(
-            tabPanel("Data Table", DT::dataTableOutput("DE_DT")),
-            tabPanel("Plot", plotOutput("volcano")),
-            tabPanel("Plot Related Table", tableOutput("DE_plot_table"))
+            tabPanel("Data Table",
+                     p("The Data Table tab shows sortable and searchable table displaying 
+                       the differential expression results."),br(),
+                     DT::dataTableOutput("DE_DT")),
+            tabPanel("Plot", 
+                     p("The Plot tab shows a plot of the DE results with the points 
+                       where the padj is less than 1 * 10^ magnitude set in the side bar colored in the highlight color selected."),br(),
+                     plotOutput("volcano")),
+            tabPanel("Plot Related Table",
+                     p("The Plot Related Table tab shows a table of the genes 
+                       that have a padj is less than 1 * 10^ magnitude set, corresponding to the results of the Plot tab."),br(),
+                     tableOutput("DE_plot_table"))
           )
         ),
       )
     ),
     tabPanel(
       "GSEA",
+      p("The GSEA tab focuses on analyzing or looking closer at the fgsea results 
+        generated in run_fgsea.R. This set of tabs has a side bar that allows for 
+        data input of the fgsea.csv results file generated."),br(),
       sidebarLayout(
         sidebarPanel(
           fileInput(
@@ -249,6 +299,9 @@ ui <- fluidPage(
           tabsetPanel(
             tabPanel(
               "Top Results",
+              p("The Top Results tab takes a slider input of the number of top pathways
+                that the user wants plotted. The bar plot of the results is 
+                displayed to the right of the slider input."),br(),
               sidebarLayout(
                 sidebarPanel(
                   sliderInput(
@@ -272,6 +325,12 @@ ui <- fluidPage(
             ),
             tabPanel(
               "Table",
+              p("The Table tab takes a slider input of adjusted pvalue threshold.
+                As well as whether the user wants to see only the posotive, 
+                negative, or all of the NES pathways. The table is filtered based
+                on the slider and pathway selection and is sortable and searchable"),br(),
+                p("This filtered table can also be dowloaded into a CSV file using the download button under
+                  the submit button."),br(),
               sidebarLayout(
                 sidebarPanel(
                   sliderInput(
@@ -303,6 +362,10 @@ ui <- fluidPage(
             ),
             tabPanel(
               "FGSEA Plot",
+              p("The FGSEA Plot tab takes a slider input to filter table by 
+              adjusted p-value. A scatter plot of NES on x-axis and -log10 
+              adjusted p-value on y-axis, with gene sets below threshold in grey color 
+                is generated and reactive to the slider input."),br(),
               sidebarLayout(
                 sidebarPanel(
                   sliderInput(
@@ -326,6 +389,9 @@ ui <- fluidPage(
             ),
             tabPanel(
               "FGSEA Plot Table",
+              p("The FGSEA Plot Table tab shows a table of the points or 
+                pathways/gene sets below the threshold (the points show in grey) 
+                set in the FGSEA Plot tab."),br(),
                 mainPanel(
                   tableOutput("gsea_plot_table")
                 ),
@@ -345,7 +411,7 @@ server <- function(input, output, session) {
 
   ############### Load Data ####################
 
-  #' Load Sammple Data
+  #' Load Sample Data
   #'
   #' @details Okay this one is a little weird but bear with me here. This is
   #' still a "function", but it will take no arguments. The `reactive({})` bit
@@ -378,7 +444,7 @@ server <- function(input, output, session) {
     return(df)
   })
 
-  #' load_Data
+  #' Load DE Data
   #'
   #' @details Okay this one is a little weird but bear with me here. This is
   #' still a "function", but it will take no arguments. The `reactive({})` bit
@@ -391,7 +457,8 @@ server <- function(input, output, session) {
     colnames(df)[1] <- "gene"
     return(df)
   })
-  #' load FGSEA Data
+  
+  #' Load FGSEA Data
   #'
   #' @details Okay this one is a little weird but bear with me here. This is
   #' still a "function", but it will take no arguments. The `reactive({})` bit
@@ -415,13 +482,10 @@ server <- function(input, output, session) {
 
   #' Draw summary table
   #'
-  #' @param dataf Data frame loaded by load_data()
+  #' @param dataf Data frame loaded by load_sample_data()
   #' @param diagnosis Diagnosis of sample row from the radio button input.
   #'
   #' @return Data frame
-  #'
-  #' @details I would suggest the function
-  #' `formatC()`
   #'
   #' @examples draw_sum_table(sample_metadata, "Neurologically normal")
   draw_sum_table <- function(dataf, diagnosis) {
@@ -435,7 +499,9 @@ server <- function(input, output, session) {
           h.v_striatal_score, vonsattel_grade
         ))
     }
-
+    # Manually looping through the columns of the filtered data 
+    # to generate the vectors for the summary table.
+    
     col_type <- c()
     dv_ms <- c()
 
@@ -449,11 +515,13 @@ server <- function(input, output, session) {
         dv_ms <- append(dv_ms, paste(u_vals, collapse = ", "))
       } else {
         m <- mean(df_out[, i])
-        s <- sd(metadata[, i])
+        s <- sd(df_out[, i])
         mean_sd <- as.character(paste0(m, " (+-", s, ")"))
         dv_ms <- append(dv_ms, mean_sd)
       }
     }
+    
+    # Forming the data frame
     column_names <- colnames(df_out)
     type_col <- col_type
     mean_sd_col <- dv_ms
@@ -466,26 +534,26 @@ server <- function(input, output, session) {
   #' Draw sample plot
   #'
   #' @param dataf Data frame loaded by load_data()
-  #' @param diagnosis Diagnosis of sample row from the radio button input.
+  #' @param y_val The category to represent the y axis.
   #'
   #' @return Data frame
   #'
-  #' @details I would suggest the function
-  #' `formatC()`
-  #'
-  #' @examples draw_sum_table(sample_metadata, "Neurologically normal")
+  #' @examples draw_sample_plot(sample_metadata, "age_of_death")
   draw_sample_plot <- function(dataf, y_val) {
     df_out <- dataf
     hd <- c("age_of_onset", "cag", "Duration", "h.v_cortical_score", "h.v_striatal_score", "vonsattel_grade")
 
+    # Selecting numeric or continuous categories
     plot_data <- df_out %>% dplyr::select(where(is.numeric))
     plot_data <- plot_data %>%
       add_column(Diagnosis = df_out$Diagnosis)
-
+    
+    # Filtering data by diagnosis if categories related to Huntington's Disease are chosen
     if (y_val %in% hd) {
       plot_data <- plot_data %>% dplyr::filter(Diagnosis == "Huntington's Disease")
     }
-
+  
+    # Generation violin plot of column
     p <- ggplot(plot_data, aes(x = Diagnosis, y = !!sym(y_val), fill = Diagnosis)) +
       geom_violin()
     theme_bw() +
@@ -496,15 +564,13 @@ server <- function(input, output, session) {
 
   #' Draw count summary table
   #'
-  #' @param dataf Data frame loaded by load_data()
-  #' @param diagnosis Diagnosis of sample row from the radio button input.
+  #' @param count_data Data frame loaded by load_count__data()
+  #' @param var_val Variance percentile user chose
+  #' @param zero_val Number of samples that are non-zero per gene
   #'
   #' @return Data frame
   #'
-  #' @details I would suggest the function
-  #' `formatC()`
-  #'
-  #' @examples draw_sum_table(sample_metadata, "Neurologically normal")
+  #' @examples draw_count_sum_table(norm_counts, 0.20, 10)
   draw_count_sum_table <- function(count_data, var_val, zero_val) {
     # number of samples
     num_samples <- NCOL(count_data)
@@ -517,6 +583,7 @@ server <- function(input, output, session) {
     zero_counts <- filter(count_data, !gene %in% nonzero_counts$gene)
     nonzero_counts$variance <- apply(nonzero_counts[, -c(1)], 1, var)
 
+    # Calculation percentile
     percent <- quantile(nonzero_counts$variance, prob = var_val / 100)
 
     var_counts <- dplyr::filter(nonzero_counts, variance >= percent) %>%
@@ -545,17 +612,15 @@ server <- function(input, output, session) {
   }
 
 
-  #' Draw count summary table
+  #' Filter Count data
   #'
-  #' @param dataf Data frame loaded by load_data()
-  #' @param diagnosis Diagnosis of sample row from the radio button input.
+  #' @param count_data Data frame loaded by load_count__data()
+  #' @param var_val Variance percentile user chose
+  #' @param zero_val Number of samples that are non-zero per gene
   #'
-  #' @return Data frame
+  #' @return Data frame`
   #'
-  #' @details I would suggest the function
-  #' `formatC()`
-  #'
-  #' @examples draw_sum_table(sample_metadata, "Neurologically normal")
+  #' @examples filter_count_data(norm_counts, 0.20, 10)
   filter_count_data <- function(count_data, var_val, zero_val) {
 
     # Filter data based on variance percentile and nonzeros
@@ -570,7 +635,8 @@ server <- function(input, output, session) {
       dplyr::select(-variance)
     not_var_counts <- filter(nonzero_counts, !gene %in% var_counts$gene) %>%
       dplyr::select(-variance)
-
+  
+    # Labeling genes that pass and do not pass filter for easier plotting
     not_filtered <- rbind(zero_counts, not_var_counts) %>% mutate(volcano = "Not Filtered")
     filtered <- var_counts %>% mutate(volcano = "Filtered")
 
@@ -580,6 +646,16 @@ server <- function(input, output, session) {
     return(data)
   }
 
+  #' median count vs variance diagnostic scatter plot
+  #'
+  #' @param data Data frame loaded by load_count__data() and filtered by filter_count_data()
+  #' @param x_lab String label for x-axis
+  #' @param y_lab String label for y-axis
+  #' @param title String label for title
+  #'
+  #' @return ggplot object
+  #'
+  #' @examples var_volcano_plot(filtered_count_data, "Rank(Median)","Variance","Median Read Counts and Variability of Zeros Over All Genes")
   var_volcano_plot <- function(data, x_lab, y_lab, title) {
     dt <- data %>% dplyr::select(-volcano)
     medians <- apply(dt[, -c(1)], 1, median)
@@ -599,8 +675,17 @@ server <- function(input, output, session) {
 
     return(p)
   }
-
-
+  
+  #' median count vs number of zeros diagnostic scatter plot
+  #'
+  #' @param data Data frame loaded by load_count__data() and filtered by filter_count_data()
+  #' @param x_lab String label for x-axis
+  #' @param y_lab String label for y-axis
+  #' @param title String label for title
+  #'
+  #' @return ggplot object
+  #'
+  #' @examples zero_volcano_plot(filtered_count_data, "Rank(Median)","Number of Zeros", "Median Read Counts and Number of Zeros Over All Genes"
   zero_volcano_plot <- function(data, x_lab, y_lab, title) {
     dt <- data %>% dplyr::select(-volcano)
     medians <- apply(dt[, -c(1)], 1, median)
@@ -621,6 +706,15 @@ server <- function(input, output, session) {
     return(p)
   }
 
+  
+  #' Clustered Heatmap
+  #'
+  #' @param data_filtered Data frame loaded by load_count__data() and filtered by filter_count_data()
+  #' @param title String label for title
+  #'
+  #' @return heatmap object
+  #'
+  #' @examples plot_heatmap(filtered_count_data, "Counts Heatmap")
   plot_heatmap <- function(data_filtered, title) {
     d_filter <- data_filtered %>%
       dplyr::filter(volcano != "Not Filtered") %>%
@@ -635,17 +729,27 @@ server <- function(input, output, session) {
       cexRow = 0.7,
       cexCol = 0.7, scale = "row", trace = "none"
     )
-    # p <- heatmaply::heatmaply(as.matrix(d_filter))
+
 
     return(p)
   }
 
+  #' PC vs PC plot
+  #'
+  #' @param filtered_data Data frame loaded by load_count__data() and filtered by filter_count_data()
+  #' @param metadata Sample metadata
+  #' @param PC_1 String of a number represnting a PC
+  #' @param PC_2 String of a number represnting a PC
+  #'
+  #' @return ggplot object
+  #'
+  #' @examples plot_pc_v_pc(filtered_count_data, metadata, "1", "2")
   plot_pc_v_pc <- function(filtered_data, metadata, PC_1, PC_2) {
     filtered_data <- filtered_data %>% # dplyr::filter(volcano == "Filtered") %>%
       dplyr::select(-volcano) %>%
       column_to_rownames(var = "gene")
 
-    print(select_if(filtered_data, is.numeric))
+    #print(select_if(filtered_data, is.numeric))
 
     pca <- prcomp(t(filtered_data))
     plot_data <- metadata
@@ -672,12 +776,20 @@ server <- function(input, output, session) {
     return(pca_plot)
   }
 
+  #' Beeswarm Plot PCA
+  #'
+  #' @param filtered_data Data frame loaded by load_count__data() and filtered by filter_count_data()
+  #' @param metadata Sample metadata
+  #'
+  #' @return ggplot object
+  #'
+  #' @examples plot_pca_beeswarm(filtered_count_data, metadata)
   plot_pca_beeswarm <- function(filtered_data, metadata) {
     filtered_data <- filtered_data %>% # dplyr::filter(volcano == "Filtered") %>%
       dplyr::select(-volcano) %>%
       column_to_rownames(var = "gene")
 
-    print(select_if(filtered_data, is.numeric))
+    #print(select_if(filtered_data, is.numeric))
 
     pca <- prcomp(t(filtered_data))
     plot_data <- metadata
@@ -808,7 +920,7 @@ server <- function(input, output, session) {
       theme(
         axis.text = element_text(size = 8),
         axis.title = element_text(size = 10),
-        plot.title = element_text(size = 20)
+        plot.title = element_text(size = 16)
       ) +
       ylab("Normalized Enrichment Score (NES)") +
       xlab("") +
@@ -818,6 +930,16 @@ server <- function(input, output, session) {
     return(plot)
   }
 
+  #' Function to filter NES pathways based on padj threshold and pathway selector.
+  #'
+  #' @param gsea_data (tibble): the fgsea results in tibble format returned by
+  #'   the previous function
+  #' @param p_thresh: padj threshold
+  #' @param pathways: String represnting type of pathways.
+  #'
+  #' @return data frame
+  #'
+  #' @examples fgsea_filtered_table <- gsea_filter_table(gsea_data, 0.1, "Positive")
   gsea_filter_table <- function(gsea_data, p_thresh, pathways) {
     gsea_filtered <- gsea_data %>%
       dplyr::mutate(status = case_when(
@@ -842,6 +964,15 @@ server <- function(input, output, session) {
     return(gsea_filtered)
   }
 
+  #' Function to filter NES pathways based on padj threshold and pathway selector.
+  #'
+  #' @param gsea_data (tibble): the fgsea results in tibble format returned by
+  #'   the previous function
+  #' @param p_thresh: padj threshold
+  #'
+  #' @return ggplot object
+  #'
+  #' @examples gsea_plot(gsea_data, -10)
   gsea_plot <- function(gsea_data, p_thresh) {
     p <- ggplot(gsea_data, aes(
       x = NES,
@@ -862,6 +993,25 @@ server <- function(input, output, session) {
     return(p)
   }
 
+  #' Draw and filter table
+  #'
+  #' @param dataf Data frame loaded by load_data()
+  #' @param slider Negative number, typically from the slider input.
+  #'
+  #' @return Data frame filtered to p-adjusted values that are less than
+  #' 1 * 10^slider, columns for p-value and p-adjusted value have more digits
+  #' displayed.
+  #' @details Same as above, this function is a standard R function. Tests will
+  #' evaluate it normally. Not only does this function filter the data frame to
+  #' rows that are above the slider magnitude, it should also change the format
+  #' of the p-value columns to display more digits. This is so that it looks
+  #' better when displayed on the web page. I would suggest the function
+  #' `formatC()`
+  #'
+  #' @examples draw_table(deseq_df, -210)
+  #'    X  baseMean     log2FC     lfcSE      stat       pvalue         padj
+  #' gene1 11690.780   9.852926 0.2644650  37.25607 8.45125e-304 1.54472e-299
+  #' gene2  3550.435  -6.183714 0.1792708 -34.49369 9.97262e-261 9.11398e-257
   draw_gsea_plot_table <- function(dataf, slider) {
     df_out <- dataf[which(dataf$padj < 1 * 10^(as.numeric(slider))), ]
     
@@ -872,6 +1022,7 @@ server <- function(input, output, session) {
 
 
   ############### Output ####################
+  # The following code generates the output seen in the ui by calling the above functions
 
   output$samp_sum_table <- renderTable(
     {
@@ -1005,9 +1156,6 @@ server <- function(input, output, session) {
     DT::datatable(table, options = list(orderClasses = TRUE))
   })
 
-  #' These outputs aren't really functions, so they don't get a full skeleton,
-  #' but use the renderPlot() and renderTabel() functions to return() a plot
-  #' or table object, and those will be displayed in your application.
   output$volcano <- renderPlot(
     {
       req(input$DE_file)
@@ -1025,8 +1173,6 @@ server <- function(input, output, session) {
     height = 700
   )
 
-
-  # Same here, just return the table as you want to see it in the web page
   output$DE_plot_table <- renderTable(
     {
       req(input$DE_file)
