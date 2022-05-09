@@ -232,14 +232,6 @@ ui <- fluidPage(
                        ".csv"),
             placeholder = "fgsea.csv"
           ),
-          sliderInput(
-            "GSEA_slider",
-            "Select the number of top pathways to plot by adjusted p-value:",
-            min = 0,
-            max = 1000,
-            value = 100,
-            step = 1
-          ),
           submitButton(
             text = "Submit",
             icon = icon("car-crash"),
@@ -249,13 +241,62 @@ ui <- fluidPage(
         # Show the volcano plot
         mainPanel(
           tabsetPanel(
-            tabPanel("Top Results"),
-            tabPanel("Table"),
+            tabPanel("Top Results",
+                     sidebarLayout(
+                       sidebarPanel(
+                         sliderInput(
+                             "GSEA_slider",
+                             "Select the number of top pathways to plot by adjusted p-value:",
+                             min = 0,
+                             max = 30,
+                             value = 15,
+                             step = 1
+                     ),
+                     submitButton(
+                       text = "Submit",
+                       icon = icon("car-crash"),
+                       width = "100%"
+                     )
+                       ),
+                     mainPanel(
+                     plotOutput("top_paths_plot")
+                     ),
+                    )
+            ),
+            tabPanel("Table",
+                     sidebarLayout(
+                       sidebarPanel(
+                         sliderInput(
+                           inputId = "GSEA_p_thresh_slider",
+                           label = "Select the adjusted p-value threshold:",
+                           min = 0,
+                           max = 1,
+                           value = 0.1,
+                           step = 0.1
+                         ),
+                         radioButtons(
+                           inputId = "pathways",
+                           label = "Select whether you want Positive, Negative, or All NES pathways:",
+                           choices = c("Positive", "Negative", "All"),
+                           selected = "All"
+                         ),
+                         submitButton(
+                           text = "Submit",
+                           icon = icon("car-crash"),
+                           width = "100%"
+                         ),
+                         br(),
+                         downloadButton('downloadData', 'Download ', width = "100%")
+                       ),
+                       mainPanel(
+                         DT::dataTableOutput("gsea_table")
+                       ),
+                     )),
             tabPanel("Plots")
           )
         ),
       )
-    )
+    ),
   
 )
 )
@@ -685,6 +726,70 @@ server <- function(input, output, session) {
   }
   
   
+  #' Function to plot top ten positive NES and top ten negative NES pathways
+  #' in a barchart
+  #'
+  #' @param fgsea_results (tibble): the fgsea results in tibble format returned by
+  #'   the previous function
+  #' @param num_paths (int): the number of pathways for each direction (top or
+  #'   down) to include in the plot. Set this at 10.
+  #'
+  #' @return ggplot with a barchart showing the top twenty pathways ranked by positive
+  #' and negative NES
+  #' @export
+  #'
+  #' @examples fgsea_plot <- top_pathways(fgsea_results, 10)
+  top_pathways <- function(fgsea_results, num_paths){
+    num_paths <- as.numeric(num_paths)
+    
+    top_pos <- fgsea_results %>% slice_max(NES, n=num_paths) %>% pull(pathway)
+    top_neg <- fgsea_results %>% slice_min(NES, n=num_paths) %>% pull(pathway)
+    
+    subset <- fgsea_results %>% 
+      filter(pathway %in% c(top_pos, top_neg)) %>%
+      mutate(pathway = factor(pathway)) %>%
+      mutate(plot_name = str_replace_all(pathway, '_', ' '))
+    
+    title <- (paste0("Top ", num_paths, " Up-regulated and Down-regulated Pathways - FGSEA Results "))
+    
+    plot <- subset %>% 
+      mutate(plot_name = forcats::fct_reorder(factor(plot_name), NES)) %>%
+      ggplot() +
+      geom_bar(aes(x=plot_name, y=NES, fill = NES > 0), stat='identity', show.legend = FALSE) +
+      scale_fill_manual(values = c('TRUE' = '#F8766D', 'FALSE' = '#619CFF')) + 
+      #theme_minimal(base_size = 8) +
+      ggtitle(title) +
+      theme(axis.text=element_text(size=8),
+            axis.title=element_text(size=16))+
+      ylab('Normalized Enrichment Score (NES)') +
+      xlab('') +
+      scale_x_discrete(labels = function(x) str_wrap(x, width = 80)) +
+      coord_flip()
+    
+    return(plot)
+  }
+  
+  gsea_filter_table <- function(gsea_data, p_thresh, pathways){
+  
+    gsea_filtered <- gsea_data %>% 
+      dplyr::mutate(status = case_when(NES > 0 ~ 'UP', 
+                                       NES < 0 ~ 'DOWN', 
+                                        TRUE ~ 'NS')) %>% 
+      dplyr::filter(padj < p_thresh)
+    
+    if(pathways == "Positive"){
+      gsea_filtered <- gsea_filtered %>% dplyr::filter(status == "UP") %>% 
+        select(-status)
+    }else if(pathways == "Negative"){
+      gsea_filtered <- gsea_filtered %>% dplyr::filter(status == "DOWN") %>% 
+        select(-status)
+    }else if(pathways == "All"){
+      gsea_filtered <- gsea_filtered %>%
+        select(-status)
+    }
+
+      return(gsea_filtered)
+  }
   
   
   ############### Output ####################
@@ -845,7 +950,37 @@ server <- function(input, output, session) {
     return(draw_DE_table(dataf = table, slider = input$slider))
   }, striped = T)
   
+  output$downloadData <- downloadHandler(
+    filename = function() { 
+      paste("dataset-", Sys.Date(), ".csv", sep="")
+    },
+    content = function(file) {
+      req(input$GSEA_file)
+      table <- load_GSEA_data()
+      filtered_data <- gsea_filter_table(table, input$GSEA_p_thresh_slider, input$pathways)
+      
+      write.csv(filtered_data, file)
+    })
   
+  output$top_paths_plot <- renderPlot(
+    {
+      req(input$GSEA_file)
+      table <- load_GSEA_data()
+      top_pathways(table, input$GSEA_slider)},
+    height = 700,
+    width = 900)
+  
+  output$gsea_table <- DT::renderDataTable({
+    req(input$GSEA_file)
+    table <- load_GSEA_data()
+    filtered_data <- gsea_filter_table(table, input$GSEA_p_thresh_slider, input$pathways)
+    
+    DT::datatable(filtered_data, 
+                  extensions = 'Buttons',
+                  options = list(
+                    orderClasses = TRUE))},
+    height = 700,
+    width = 900)
 
   
   
