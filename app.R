@@ -219,6 +219,42 @@ ui <- fluidPage(
           )
         ),
       )
+    ),
+    tabPanel(
+      "GSEA",
+      sidebarLayout(
+        sidebarPanel(
+          fileInput(
+            "GSEA_file",
+            label = "Load FGSEA file:",
+            accept = c("text/csv",
+                       "text/comma-separated-values,text/plain",
+                       ".csv"),
+            placeholder = "fgsea.csv"
+          ),
+          sliderInput(
+            "GSEA_slider",
+            "Select the number of top pathways to plot by adjusted p-value:",
+            min = 0,
+            max = 1000,
+            value = 100,
+            step = 1
+          ),
+          submitButton(
+            text = "Submit",
+            icon = icon("car-crash"),
+            width = "100%"
+          )
+        ),
+        # Show the volcano plot
+        mainPanel(
+          tabsetPanel(
+            tabPanel("Top Results"),
+            tabPanel("Table"),
+            tabPanel("Plots")
+          )
+        ),
+      )
     )
   
 )
@@ -275,6 +311,24 @@ server <- function(input, output, session) {
   load_DE_data <- reactive({
     df <- read_tsv(input$DE_file$datapath, col_names = TRUE, show_col_types = FALSE)
     colnames(df)[1] <- "gene"
+    return(df)
+  })
+  #' load FGSEA Data
+  #'
+  #' @details Okay this one is a little weird but bear with me here. This is 
+  #' still a "function", but it will take no arguments. The `reactive({})` bit 
+  #' says "if any of my inputs (as in, input$...) are changed, run me again". 
+  #' This is useful when a user clicks a new button or loads a new file. In 
+  #' our case, look for the uploaded file's datapath argument and load it with 
+  #' read.csv. Return this data frame in the normal return() style.
+  load_GSEA_data <- reactive({
+    inFile <- input$GSEA_file
+    
+    if (is.null(inFile)) {
+      return(NULL)
+    }
+    df <- read.csv(file = inFile$datapath, header = TRUE, stringsAsFactors = TRUE)
+    
     return(df)
   })
   
