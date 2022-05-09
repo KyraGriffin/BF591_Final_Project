@@ -292,12 +292,32 @@ ui <- fluidPage(
                          DT::dataTableOutput("gsea_table")
                        ),
                      )),
-            tabPanel("Plots")
+            tabPanel("FGSEA Plot",
+                     sidebarLayout(
+              sidebarPanel(
+                sliderInput(
+                  inputId = "GSEA_thresh_plot_slider",
+                  label = "Select the adjusted p-value threshold:",
+                  min = -30,
+                  max = 5,
+                  value = -10,
+                  step = 1
+                ),
+                submitButton(
+                  text = "Submit",
+                  icon = icon("car-crash"),
+                  width = "100%"
+                )
+              ),
+              mainPanel(
+                plotOutput("gsea_plot")
+              ),
           )
         ),
-      )
-    ),
+          )),
+      ),
   
+)
 )
 )
 
@@ -760,7 +780,8 @@ server <- function(input, output, session) {
       #theme_minimal(base_size = 8) +
       ggtitle(title) +
       theme(axis.text=element_text(size=8),
-            axis.title=element_text(size=16))+
+            axis.title=element_text(size=10),
+            plot.title = element_text(size=20))+
       ylab('Normalized Enrichment Score (NES)') +
       xlab('') +
       scale_x_discrete(labels = function(x) str_wrap(x, width = 80)) +
@@ -770,13 +791,11 @@ server <- function(input, output, session) {
   }
   
   gsea_filter_table <- function(gsea_data, p_thresh, pathways){
-  
     gsea_filtered <- gsea_data %>% 
       dplyr::mutate(status = case_when(NES > 0 ~ 'UP', 
                                        NES < 0 ~ 'DOWN', 
                                         TRUE ~ 'NS')) %>% 
       dplyr::filter(padj < p_thresh)
-    
     if(pathways == "Positive"){
       gsea_filtered <- gsea_filtered %>% dplyr::filter(status == "UP") %>% 
         select(-status)
@@ -790,6 +809,23 @@ server <- function(input, output, session) {
 
       return(gsea_filtered)
   }
+  
+  gsea_plot <-function(gsea_data, p_thresh) {
+    
+      p <- ggplot(gsea_data, aes(x = NES,
+                  y = -log10(padj))) +
+        geom_point(aes(color =  padj < 1 * 10 ^ (as.numeric(p_thresh)))) +
+        theme_bw() +
+        scale_color_manual(values = c('#F8766D', "grey")) +
+        ggtitle("NES Vs. -log10 adjusted p-value")+
+        theme(legend.position = "bottom",
+              axis.text=element_text(size=8),
+              axis.title=element_text(size=10),
+              plot.title = element_text(size=20)) +
+        labs(color = paste0("padj < 1 × 10^", (as.numeric(p_thresh))))
+      
+      return(p)
+    }
   
   
   ############### Output ####################
@@ -982,6 +1018,14 @@ server <- function(input, output, session) {
     height = 700,
     width = 900)
 
+  output$gsea_plot <- renderPlot(
+    {
+      req(input$GSEA_file)
+      gsea_data <- load_GSEA_data()
+      gsea_plot(gsea_data, input$GSEA_thresh_plot_slider)
+    },    
+    height = 700,
+    width = 900)
   
   
 }
