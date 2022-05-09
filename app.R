@@ -47,6 +47,7 @@ ui <- fluidPage(
                     width: 100px;}"))
   ),
   titlePanel("BF591 Final Project - Kyra Griffin"),
+  h4("Post-mortem Huntington’s Disease prefrontal cortex compared with neurologically healthy controls"),
   tabsetPanel(
     tabPanel(
       "Samples",
