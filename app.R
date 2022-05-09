@@ -19,16 +19,17 @@ library(ggplot2)
 library(plotly)
 library(colourpicker)
 # install.packages('shinyHeatmaply')
-#install.packages("devtools")
-#devtools::install_github("thomasp85/patchwork")
-#install.packages("gplots")
+# install.packages("devtools")
+# devtools::install_github("thomasp85/patchwork")
+# install.packages("gplots")
 
 dataset_choice <- c("Neurologically normal", "Huntington's Disease")
 sample_y_choice <- c(
   "age_of_death", "AvgSpotLen", "Bases", "Bytes",
   "mrna.seq_reads", "pmi", "rin", "age_of_onset", "cag",
   "Duration", "h.v_cortical_score", "h.v_striatal_score",
-  "vonsattel_grade")
+  "vonsattel_grade"
+)
 
 deseq_choices <-
   c("baseMean", "log2FoldChange", "lfcSE", "stat", "pvalue", "padj")
@@ -130,7 +131,8 @@ ui <- fluidPage(
                 cellWidths = c("50%", "50%"),
                 plotOutput("median_vs_var_plot"),
                 plotOutput("median_vs_zeros")
-              )),
+              )
+            ),
             tabPanel(
               "Clustered Heatmap", br(),
               plotOutput("count_heatmap")
@@ -159,9 +161,11 @@ ui <- fluidPage(
           fileInput(
             "DE_file",
             label = "Load differential expression results",
-            accept = c("text/csv",
-                       "text/comma-separated-values,text/plain",
-                       ".csv"),
+            accept = c(
+              "text/csv",
+              "text/comma-separated-values,text/plain",
+              ".csv"
+            ),
             placeholder = "GSE64810_mlhd_DESeq2_diffexp_DESeq2_outlier_trimmed_adjust.csv"
           ),
           HTML(
@@ -213,9 +217,9 @@ ui <- fluidPage(
         # Show the volcano plot
         mainPanel(
           tabsetPanel(
-          tabPanel("Data Table", DT::dataTableOutput("DE_DT")),
-          tabPanel("Plot", plotOutput("volcano")),
-          tabPanel("Plot Related Table", tableOutput("DE_plot_table"))
+            tabPanel("Data Table", DT::dataTableOutput("DE_DT")),
+            tabPanel("Plot", plotOutput("volcano")),
+            tabPanel("Plot Related Table", tableOutput("DE_plot_table"))
           )
         ),
       )
@@ -227,9 +231,11 @@ ui <- fluidPage(
           fileInput(
             "GSEA_file",
             label = "Load FGSEA file:",
-            accept = c("text/csv",
-                       "text/comma-separated-values,text/plain",
-                       ".csv"),
+            accept = c(
+              "text/csv",
+              "text/comma-separated-values,text/plain",
+              ".csv"
+            ),
             placeholder = "fgsea.csv"
           ),
           submitButton(
@@ -241,93 +247,104 @@ ui <- fluidPage(
         # Show the volcano plot
         mainPanel(
           tabsetPanel(
-            tabPanel("Top Results",
-                     sidebarLayout(
-                       sidebarPanel(
-                         sliderInput(
-                             "GSEA_slider",
-                             "Select the number of top pathways to plot by adjusted p-value:",
-                             min = 0,
-                             max = 30,
-                             value = 15,
-                             step = 1
-                     ),
-                     submitButton(
-                       text = "Submit",
-                       icon = icon("car-crash"),
-                       width = "100%"
-                     )
-                       ),
-                     mainPanel(
-                     plotOutput("top_paths_plot")
-                     ),
-                    )
-            ),
-            tabPanel("Table",
-                     sidebarLayout(
-                       sidebarPanel(
-                         sliderInput(
-                           inputId = "GSEA_p_thresh_slider",
-                           label = "Select the adjusted p-value threshold:",
-                           min = 0,
-                           max = 1,
-                           value = 0.1,
-                           step = 0.1
-                         ),
-                         radioButtons(
-                           inputId = "pathways",
-                           label = "Select whether you want Positive, Negative, or All NES pathways:",
-                           choices = c("Positive", "Negative", "All"),
-                           selected = "All"
-                         ),
-                         submitButton(
-                           text = "Submit",
-                           icon = icon("car-crash"),
-                           width = "100%"
-                         ),
-                         br(),
-                         downloadButton('downloadData', 'Download ', width = "100%")
-                       ),
-                       mainPanel(
-                         DT::dataTableOutput("gsea_table")
-                       ),
-                     )),
-            tabPanel("FGSEA Plot",
-                     sidebarLayout(
-              sidebarPanel(
-                sliderInput(
-                  inputId = "GSEA_thresh_plot_slider",
-                  label = "Select the adjusted p-value threshold:",
-                  min = -30,
-                  max = 5,
-                  value = -10,
-                  step = 1
+            tabPanel(
+              "Top Results",
+              sidebarLayout(
+                sidebarPanel(
+                  sliderInput(
+                    "GSEA_slider",
+                    "Select the number of top pathways to plot by adjusted p-value:",
+                    min = 0,
+                    max = 30,
+                    value = 15,
+                    step = 1
+                  ),
+                  submitButton(
+                    text = "Submit",
+                    icon = icon("car-crash"),
+                    width = "100%"
+                  )
                 ),
-                submitButton(
-                  text = "Submit",
-                  icon = icon("car-crash"),
-                  width = "100%"
-                )
-              ),
-              mainPanel(
-                plotOutput("gsea_plot")
-              ),
+                mainPanel(
+                  plotOutput("top_paths_plot")
+                ),
+              )
+            ),
+            tabPanel(
+              "Table",
+              sidebarLayout(
+                sidebarPanel(
+                  sliderInput(
+                    inputId = "GSEA_p_thresh_slider",
+                    label = "Select the adjusted p-value threshold:",
+                    min = 0,
+                    max = 1,
+                    value = 0.1,
+                    step = 0.1
+                  ),
+                  radioButtons(
+                    inputId = "pathways",
+                    label = "Select whether you want Positive, Negative, or All NES pathways:",
+                    choices = c("Positive", "Negative", "All"),
+                    selected = "All"
+                  ),
+                  submitButton(
+                    text = "Submit",
+                    icon = icon("car-crash"),
+                    width = "100%"
+                  ),
+                  br(),
+                  downloadButton("downloadData", "Download ", width = "100%")
+                ),
+                mainPanel(
+                  DT::dataTableOutput("gsea_table")
+                ),
+              )
+            ),
+            tabPanel(
+              "FGSEA Plot",
+              sidebarLayout(
+                sidebarPanel(
+                  sliderInput(
+                    inputId = "GSEA_thresh_plot_slider",
+                    label = "Select the adjusted p-value threshold:",
+                    min = -30,
+                    max = 5,
+                    value = -10,
+                    step = 1
+                  ),
+                  submitButton(
+                    text = "Submit",
+                    icon = icon("car-crash"),
+                    width = "100%"
+                  )
+                ),
+                mainPanel(
+                  plotOutput("gsea_plot")
+                ),
+              )
+            ),
+            tabPanel(
+              "FGSEA Plot Table",
+                mainPanel(
+                  tableOutput("gsea_plot_table")
+                ),
+              
+            ),
           )
         ),
-          )),
       ),
-  
-)
-)
+    )
+  )
 )
 
 
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
   options(shiny.maxRequestSize = 35 * 1024^2)
-  
+
   ############### Load Data ####################
-  
+
   #' Load Sammple Data
   #'
   #' @details Okay this one is a little weird but bear with me here. This is
@@ -338,15 +355,15 @@ server <- function(input, output, session) {
   #' read.csv. Return this data frame in the normal return() style.
   load_sample_data <- reactive({
     inFile <- input$sample_metadata
-    
+
     if (is.null(inFile)) {
       return(NULL)
     }
     df <- read.csv(file = inFile$datapath, header = TRUE, stringsAsFactors = TRUE)
-    
+
     return(df)
   })
-  
+
   #' Load Counts Data
   #'
   #' @details Okay this one is a little weird but bear with me here. This is
@@ -360,14 +377,14 @@ server <- function(input, output, session) {
     colnames(df)[1] <- "gene"
     return(df)
   })
-  
+
   #' load_Data
   #'
-  #' @details Okay this one is a little weird but bear with me here. This is 
-  #' still a "function", but it will take no arguments. The `reactive({})` bit 
-  #' says "if any of my inputs (as in, input$...) are changed, run me again". 
-  #' This is useful when a user clicks a new button or loads a new file. In 
-  #' our case, look for the uploaded file's datapath argument and load it with 
+  #' @details Okay this one is a little weird but bear with me here. This is
+  #' still a "function", but it will take no arguments. The `reactive({})` bit
+  #' says "if any of my inputs (as in, input$...) are changed, run me again".
+  #' This is useful when a user clicks a new button or loads a new file. In
+  #' our case, look for the uploaded file's datapath argument and load it with
   #' read.csv. Return this data frame in the normal return() style.
   load_DE_data <- reactive({
     df <- read_tsv(input$DE_file$datapath, col_names = TRUE, show_col_types = FALSE)
@@ -376,38 +393,26 @@ server <- function(input, output, session) {
   })
   #' load FGSEA Data
   #'
-  #' @details Okay this one is a little weird but bear with me here. This is 
-  #' still a "function", but it will take no arguments. The `reactive({})` bit 
-  #' says "if any of my inputs (as in, input$...) are changed, run me again". 
-  #' This is useful when a user clicks a new button or loads a new file. In 
-  #' our case, look for the uploaded file's datapath argument and load it with 
+  #' @details Okay this one is a little weird but bear with me here. This is
+  #' still a "function", but it will take no arguments. The `reactive({})` bit
+  #' says "if any of my inputs (as in, input$...) are changed, run me again".
+  #' This is useful when a user clicks a new button or loads a new file. In
+  #' our case, look for the uploaded file's datapath argument and load it with
   #' read.csv. Return this data frame in the normal return() style.
   load_GSEA_data <- reactive({
     inFile <- input$GSEA_file
-    
+
     if (is.null(inFile)) {
       return(NULL)
     }
     df <- read.csv(file = inFile$datapath, header = TRUE, stringsAsFactors = TRUE)
-    
+
     return(df)
   })
-  
+
   ############### Functions ####################
-  
-  # I would write a function that accepts a single column of the metadata 
-  # dataframe that first calculates the type of the column, then conditionally 
-  # computes the distinct values or mean/sd based on that output. 
-  #The function would return the results for the entire row. 
-  
-  # determine_val <- function(row){
-  #   type <- apply(row, 1, is.factor)
-  #   if(type == TRUE){
-  #     dv_ms<- apply(row, function(x) toString(unique(x)))
-  #   }
-  #   
-  # }
-  
+
+
   #' Draw summary table
   #'
   #' @param dataf Data frame loaded by load_data()
@@ -422,28 +427,42 @@ server <- function(input, output, session) {
   draw_sum_table <- function(dataf, diagnosis) {
     df_out <- dataf %>%
       dplyr::filter(Diagnosis == diagnosis)
-    
+
     if (diagnosis == "Neurologically normal") {
       df_out <- dataf %>%
-        dplyr::select(-c(age_of_onset, cag, Duration, h.v_cortical_score, 
-                         h.v_striatal_score, vonsattel_grade))
-      
-      column_names <- colnames(df_out)
-      type_col <- sapply(df_out, class)
-      distinct_val <- sapply(df_out, function(x) toString(unique(x)[1:5]))
-      mean_sd_col <- sapply(df_out, is.factor)
-    } else {
-      column_names <- colnames(df_out)
-      type_col <- sapply(df_out, class)
-      distinct_val <- sapply(df_out, function(x) toString(unique(x)))
-      mean_sd_col <- sapply(df_out, is.factor)
+        dplyr::select(-c(
+          age_of_onset, cag, Duration, h.v_cortical_score,
+          h.v_striatal_score, vonsattel_grade
+        ))
     }
-    
-    df <- data.frame(column_names, type_col, distinct_val, mean_sd_col)
-    # colnames(df) = c("Column Name",	"Type", "Mean (sd) or Distinct Values", "temp vals")
+
+    col_type <- c()
+    dv_ms <- c()
+
+    for (i in 1:ncol(df_out)) {
+      col <- df_out[, i]
+      type <- class(col)
+      col_type <- append(col_type, type)
+
+      if (type == "factor") {
+        u_vals <- as.character(unique(df_out[, i]))
+        dv_ms <- append(dv_ms, paste(u_vals, collapse = ", "))
+      } else {
+        m <- mean(df_out[, i])
+        s <- sd(metadata[, i])
+        mean_sd <- as.character(paste0(m, " (+-", s, ")"))
+        dv_ms <- append(dv_ms, mean_sd)
+      }
+    }
+    column_names <- colnames(df_out)
+    type_col <- col_type
+    mean_sd_col <- dv_ms
+    df <- data.frame(column_names, type_col, mean_sd_col)
+    colnames(df) <- c("Column Name", "Type", "Mean (sd) or Distinct Values")
+
     return(df)
   }
-  
+
   #' Draw sample plot
   #'
   #' @param dataf Data frame loaded by load_data()
@@ -458,23 +477,23 @@ server <- function(input, output, session) {
   draw_sample_plot <- function(dataf, y_val) {
     df_out <- dataf
     hd <- c("age_of_onset", "cag", "Duration", "h.v_cortical_score", "h.v_striatal_score", "vonsattel_grade")
-    
+
     plot_data <- df_out %>% dplyr::select(where(is.numeric))
     plot_data <- plot_data %>%
       add_column(Diagnosis = df_out$Diagnosis)
-    
+
     if (y_val %in% hd) {
       plot_data <- plot_data %>% dplyr::filter(Diagnosis == "Huntington's Disease")
     }
-    
+
     p <- ggplot(plot_data, aes(x = Diagnosis, y = !!sym(y_val), fill = Diagnosis)) +
       geom_violin()
     theme_bw() +
       theme(legend.position = "bottom")
-    
+
     return(p)
   }
-  
+
   #' Draw count summary table
   #'
   #' @param dataf Data frame loaded by load_data()
@@ -491,31 +510,31 @@ server <- function(input, output, session) {
     num_samples <- NCOL(count_data)
     # total number of genes
     total_genes <- length(count_data$gene)
-    
+
     # Filter data based on variance percentile and nonzeros
     nonzero_genes <- rowSums(count_data[-1] == 0) >= zero_val
     nonzero_counts <- count_data[nonzero_genes, ]
     zero_counts <- filter(count_data, !gene %in% nonzero_counts$gene)
     nonzero_counts$variance <- apply(nonzero_counts[, -c(1)], 1, var)
-    
+
     percent <- quantile(nonzero_counts$variance, prob = var_val / 100)
-    
+
     var_counts <- dplyr::filter(nonzero_counts, variance >= percent) %>%
-      select(-variance)
-    
+      dplyr::select(-variance)
+
     # number and % of genes passing current filter
     num_pass <- length(var_counts$gene)
     n1 <- round((num_pass / total_genes) * 100, 2)
     pass <- c(num_pass, n1)
     num_pass <- toString(pass, width = 30)
-    
+
     # number and % of genes not passing current filter
     np <- length(zero_counts$gene) + (length(nonzero_counts$gene) - length(var_counts$gene))
     n2 <- round(((np / total_genes) * 100), 2)
     not_pass <- c(np, n2)
-    
+
     num_not_pass <- toString(not_pass, width = 30)
-    
+
     df <- data.frame(num_samples, total_genes, num_pass, num_not_pass)
     colnames(df) <- c(
       "Number of Samples", "Total Number of Genes",
@@ -524,8 +543,8 @@ server <- function(input, output, session) {
     )
     return(df)
   }
-  
-  
+
+
   #' Draw count summary table
   #'
   #' @param dataf Data frame loaded by load_data()
@@ -538,37 +557,37 @@ server <- function(input, output, session) {
   #'
   #' @examples draw_sum_table(sample_metadata, "Neurologically normal")
   filter_count_data <- function(count_data, var_val, zero_val) {
-    
+
     # Filter data based on variance percentile and nonzeros
     nonzero_genes <- rowSums(count_data[-1] == 0) >= zero_val
     nonzero_counts <- count_data[nonzero_genes, ]
-    
+
     zero_counts <- filter(count_data, !gene %in% nonzero_counts$gene)
     nonzero_counts$variance <- apply(nonzero_counts[, -c(1)], 1, var)
-    
+
     percent <- quantile(nonzero_counts$variance, prob = var_val / 100)
     var_counts <- dplyr::filter(nonzero_counts, variance >= percent) %>%
-      select(-variance)
+      dplyr::select(-variance)
     not_var_counts <- filter(nonzero_counts, !gene %in% var_counts$gene) %>%
-      select(-variance)
-    
+      dplyr::select(-variance)
+
     not_filtered <- rbind(zero_counts, not_var_counts) %>% mutate(volcano = "Not Filtered")
     filtered <- var_counts %>% mutate(volcano = "Filtered")
-    
+
     data <- as.data.frame(rbind(filtered, not_filtered))
-    
-    
+
+
     return(data)
   }
-  
+
   var_volcano_plot <- function(data, x_lab, y_lab, title) {
-    dt <- data %>% select(-volcano)
+    dt <- data %>% dplyr::select(-volcano)
     medians <- apply(dt[, -c(1)], 1, median)
     variances <- apply(dt[, -c(1)], 1, var)
-    
+
     plot_data <- tibble::tibble(median = medians, variance = variances, volcano = data$volcano)
     plot_data$rank <- rank(plot_data$median)
-    
+
     p <- ggplot(plot_data, aes(x = rank, y = variance)) +
       geom_point(aes(color = volcano)) +
       scale_color_manual(values = c("#619CFF", "#F8766D")) +
@@ -577,19 +596,19 @@ server <- function(input, output, session) {
       ggplot2::ylab(y_lab) +
       ggtitle(title)
     theme(legend.position = "bottom")
-    
+
     return(p)
   }
-  
-  
+
+
   zero_volcano_plot <- function(data, x_lab, y_lab, title) {
-    dt <- data %>% select(-volcano)
+    dt <- data %>% dplyr::select(-volcano)
     medians <- apply(dt[, -c(1)], 1, median)
     num_zero <- rowSums(dt[, -c(1)] == 0)
-    
+
     plot_data <- tibble::tibble(median = medians, zeros = num_zero, volcano = data$volcano)
     plot_data$rank <- rank(plot_data$median)
-    
+
     p <- ggplot(plot_data, aes(x = rank, y = zeros)) +
       geom_point(aes(color = volcano)) +
       scale_color_manual(values = c("#619CFF", "#F8766D")) +
@@ -598,95 +617,96 @@ server <- function(input, output, session) {
       ggplot2::ylab(y_lab) +
       ggtitle(title)
     theme(legend.position = "bottom")
-    
+
     return(p)
   }
-  
+
   plot_heatmap <- function(data_filtered, title) {
     d_filter <- data_filtered %>%
       dplyr::filter(volcano != "Not Filtered") %>%
-      select(-volcano) %>%
+      dplyr::select(-volcano) %>%
       column_to_rownames(var = "gene")
-    
-    #print(select_if(d_filter, is.numeric))
-    
+
+    # print(select_if(d_filter, is.numeric))
+
     p <- heatmap.2(as.matrix(d_filter),
-                 margins = c(5, 5),
-                 main = title,
-                 cexRow = 0.7,
-                 cexCol = 0.7, scale="row", trace="none")
+      margins = c(5, 5),
+      main = title,
+      cexRow = 0.7,
+      cexCol = 0.7, scale = "row", trace = "none"
+    )
     # p <- heatmaply::heatmaply(as.matrix(d_filter))
-    
+
     return(p)
   }
-  
+
   plot_pc_v_pc <- function(filtered_data, metadata, PC_1, PC_2) {
     filtered_data <- filtered_data %>% # dplyr::filter(volcano == "Filtered") %>%
-      select(-volcano) %>%
+      dplyr::select(-volcano) %>%
       column_to_rownames(var = "gene")
-    
+
     print(select_if(filtered_data, is.numeric))
-    
+
     pca <- prcomp(t(filtered_data))
     plot_data <- metadata
-    
+
     pc_1 <- as.numeric(PC_1)
     pc_2 <- as.numeric(PC_2)
-    
-    
+
+
     plot_data$PC1 <- pca$x[, pc_1]
     plot_data$PC2 <- pca$x[, pc_2]
     percent_var <- pca$sdev^2 / sum(pca$sdev^2)
-    
+
     title <- (paste0(
       "PC", pc_1, ": ", round(percent_var[pc_1] * 100), "% variance", " Vs. ",
       "PC", pc_2, ": ", round(percent_var[pc_2] * 100), "% variance"
     ))
-    
+
     pca_plot <- ggplot(plot_data, aes(x = PC1, y = PC2, col = Diagnosis)) +
       geom_point() +
       xlab(paste0("PC", pc_1, ": ", round(percent_var[pc_1] * 100), "% variance ")) +
       ylab(paste0("PC", pc_2, ": ", round(percent_var[pc_2] * 100), "% variance")) +
       ggtitle(title)
-    
+
     return(pca_plot)
   }
-  
+
   plot_pca_beeswarm <- function(filtered_data, metadata) {
     filtered_data <- filtered_data %>% # dplyr::filter(volcano == "Filtered") %>%
-      select(-volcano) %>%
+      dplyr::select(-volcano) %>%
       column_to_rownames(var = "gene")
-    
+
     print(select_if(filtered_data, is.numeric))
-    
+
     pca <- prcomp(t(filtered_data))
     plot_data <- metadata
-    
-    pc_1 <- as.numeric("1")  
-    pc_2 <- as.numeric("2")  
-    
-    
-    plot_data$PC1 <- pca$x[ , pc_1]
-    plot_data$PC2 <- pca$x[ , pc_2]
-    percent_var <- pca$sdev^2 / sum( pca$sdev^2 )
-    
-    
+
+    pc_1 <- as.numeric("1")
+    pc_2 <- as.numeric("2")
+
+
+    plot_data$PC1 <- pca$x[, pc_1]
+    plot_data$PC2 <- pca$x[, pc_2]
+    percent_var <- pca$sdev^2 / sum(pca$sdev^2)
+
+
     pca_plot1 <- ggplot(plot_data) +
-      geom_beeswarm(aes(x=Diagnosis, y=PC1, color=Diagnosis),cex=2,size=2, show.legend = FALSE)+
-      ylab(paste0("PC", pc_1, ": ",round(percent_var[pc_1] * 100),"% variance")) +
+      geom_beeswarm(aes(x = Diagnosis, y = PC1, color = Diagnosis), cex = 2, size = 2, show.legend = FALSE) +
+      ylab(paste0("PC", pc_1, ": ", round(percent_var[pc_1] * 100), "% variance")) +
       ggtitle("Beeswarm Plot of PC 1")
-    
+
     pca_plot2 <- ggplot(plot_data) +
-      geom_beeswarm(aes(x=Diagnosis, y=PC2, color=Diagnosis),cex=2,size=2)+
-      ylab(paste0("PC", pc_2, ": ",round(percent_var[pc_2] * 100),"% variance")) +
+      geom_beeswarm(aes(x = Diagnosis, y = PC2, color = Diagnosis), cex = 2, size = 2) +
+      ylab(paste0("PC", pc_2, ": ", round(percent_var[pc_2] * 100), "% variance")) +
       ggtitle("Beeswarm Plot of PC 2")
-    
+
     count_pca_plot <- pca_plot1 | pca_plot2
-    
+
     return(count_pca_plot)
   }
-  
-  
+
+
   #' Volcano plot
   #'
   #' @param dataf The loaded data frame.
@@ -699,53 +719,55 @@ server <- function(input, output, session) {
   #'
   #' @return A ggplot object of a volcano plot
   #' @details I bet you're tired of these plots by now. Me too, don't worry.
-  #' This is _just_ a normal function. No reactivity, no bells, no whistles. 
-  #' Write a normal volcano plot using geom_point, and integrate all the above 
-  #' values into it as shown in the example app. The testing script will treat 
+  #' This is _just_ a normal function. No reactivity, no bells, no whistles.
+  #' Write a normal volcano plot using geom_point, and integrate all the above
+  #' values into it as shown in the example app. The testing script will treat
   #' this as a normal function.
-  #' 
+  #'
   #' !!sym() may be required to access column names in ggplot aes().
   #'
   #' @examples volcano_plot(df, "log2fc", "padj", -100, "blue", "taupe")
   volcano_plot <-
     function(dataf, x_name, y_name, slider, color1, color2) {
-      p <- ggplot(dataf, aes(x = !!sym(x_name),
-                             y = -log10(!!sym(y_name)))) +
-        geom_point(aes(color = !!sym(y_name) < 1 * 10 ^ (as.numeric(slider)))) +
+      p <- ggplot(dataf, aes(
+        x = !!sym(x_name),
+        y = -log10(!!sym(y_name))
+      )) +
+        geom_point(aes(color = !!sym(y_name) < 1 * 10^(as.numeric(slider)))) +
         theme_bw() +
         scale_color_manual(values = c(color1, color2)) +
         theme(legend.position = "bottom") +
         labs(color = paste0(y_name, " < 1 × 10^", slider))
       return(p)
     }
-  
+
   #' Draw and filter table
   #'
   #' @param dataf Data frame loaded by load_data()
   #' @param slider Negative number, typically from the slider input.
   #'
-  #' @return Data frame filtered to p-adjusted values that are less than 
-  #' 1 * 10^slider, columns for p-value and p-adjusted value have more digits 
+  #' @return Data frame filtered to p-adjusted values that are less than
+  #' 1 * 10^slider, columns for p-value and p-adjusted value have more digits
   #' displayed.
-  #' @details Same as above, this function is a standard R function. Tests will 
-  #' evaluate it normally. Not only does this function filter the data frame to 
-  #' rows that are above the slider magnitude, it should also change the format 
-  #' of the p-value columns to display more digits. This is so that it looks 
-  #' better when displayed on the web page. I would suggest the function 
+  #' @details Same as above, this function is a standard R function. Tests will
+  #' evaluate it normally. Not only does this function filter the data frame to
+  #' rows that are above the slider magnitude, it should also change the format
+  #' of the p-value columns to display more digits. This is so that it looks
+  #' better when displayed on the web page. I would suggest the function
   #' `formatC()`
   #'
   #' @examples draw_table(deseq_df, -210)
   #'    X  baseMean     log2FC     lfcSE      stat       pvalue         padj
-  #'gene1 11690.780   9.852926 0.2644650  37.25607 8.45125e-304 1.54472e-299
-  #'gene2  3550.435  -6.183714 0.1792708 -34.49369 9.97262e-261 9.11398e-257
+  #' gene1 11690.780   9.852926 0.2644650  37.25607 8.45125e-304 1.54472e-299
+  #' gene2  3550.435  -6.183714 0.1792708 -34.49369 9.97262e-261 9.11398e-257
   draw_DE_table <- function(dataf, slider) {
-    df_out <- dataf[which(dataf$padj < 1 * 10 ^ (as.numeric(slider))),]
+    df_out <- dataf[which(dataf$padj < 1 * 10^(as.numeric(slider))), ]
     df_out$pvalue <- formatC(df_out$pvalue, digits = -2)
     df_out$padj <- formatC(df_out$padj, digits = -2)
     return(df_out)
   }
-  
-  
+
+
   #' Function to plot top ten positive NES and top ten negative NES pathways
   #' in a barchart
   #'
@@ -759,77 +781,98 @@ server <- function(input, output, session) {
   #' @export
   #'
   #' @examples fgsea_plot <- top_pathways(fgsea_results, 10)
-  top_pathways <- function(fgsea_results, num_paths){
+  top_pathways <- function(fgsea_results, num_paths) {
     num_paths <- as.numeric(num_paths)
-    
-    top_pos <- fgsea_results %>% slice_max(NES, n=num_paths) %>% pull(pathway)
-    top_neg <- fgsea_results %>% slice_min(NES, n=num_paths) %>% pull(pathway)
-    
-    subset <- fgsea_results %>% 
+
+    top_pos <- fgsea_results %>%
+      slice_max(NES, n = num_paths) %>%
+      pull(pathway)
+    top_neg <- fgsea_results %>%
+      slice_min(NES, n = num_paths) %>%
+      pull(pathway)
+
+    subset <- fgsea_results %>%
       filter(pathway %in% c(top_pos, top_neg)) %>%
       mutate(pathway = factor(pathway)) %>%
-      mutate(plot_name = str_replace_all(pathway, '_', ' '))
-    
+      mutate(plot_name = str_replace_all(pathway, "_", " "))
+
     title <- (paste0("Top ", num_paths, " Up-regulated and Down-regulated Pathways - FGSEA Results "))
-    
-    plot <- subset %>% 
+
+    plot <- subset %>%
       mutate(plot_name = forcats::fct_reorder(factor(plot_name), NES)) %>%
       ggplot() +
-      geom_bar(aes(x=plot_name, y=NES, fill = NES > 0), stat='identity', show.legend = FALSE) +
-      scale_fill_manual(values = c('TRUE' = '#F8766D', 'FALSE' = '#619CFF')) + 
-      #theme_minimal(base_size = 8) +
+      geom_bar(aes(x = plot_name, y = NES, fill = NES > 0), stat = "identity", show.legend = FALSE) +
+      scale_fill_manual(values = c("TRUE" = "#F8766D", "FALSE" = "#619CFF")) +
+      # theme_minimal(base_size = 8) +
       ggtitle(title) +
-      theme(axis.text=element_text(size=8),
-            axis.title=element_text(size=10),
-            plot.title = element_text(size=20))+
-      ylab('Normalized Enrichment Score (NES)') +
-      xlab('') +
+      theme(
+        axis.text = element_text(size = 8),
+        axis.title = element_text(size = 10),
+        plot.title = element_text(size = 20)
+      ) +
+      ylab("Normalized Enrichment Score (NES)") +
+      xlab("") +
       scale_x_discrete(labels = function(x) str_wrap(x, width = 80)) +
       coord_flip()
-    
+
     return(plot)
   }
-  
-  gsea_filter_table <- function(gsea_data, p_thresh, pathways){
-    gsea_filtered <- gsea_data %>% 
-      dplyr::mutate(status = case_when(NES > 0 ~ 'UP', 
-                                       NES < 0 ~ 'DOWN', 
-                                        TRUE ~ 'NS')) %>% 
+
+  gsea_filter_table <- function(gsea_data, p_thresh, pathways) {
+    gsea_filtered <- gsea_data %>%
+      dplyr::mutate(status = case_when(
+        NES > 0 ~ "UP",
+        NES < 0 ~ "DOWN",
+        TRUE ~ "NS"
+      )) %>%
       dplyr::filter(padj < p_thresh)
-    if(pathways == "Positive"){
-      gsea_filtered <- gsea_filtered %>% dplyr::filter(status == "UP") %>% 
-        select(-status)
-    }else if(pathways == "Negative"){
-      gsea_filtered <- gsea_filtered %>% dplyr::filter(status == "DOWN") %>% 
-        select(-status)
-    }else if(pathways == "All"){
+    if (pathways == "Positive") {
       gsea_filtered <- gsea_filtered %>%
-        select(-status)
+        dplyr::filter(status == "UP") %>%
+        dplyr::select(-status)
+    } else if (pathways == "Negative") {
+      gsea_filtered <- gsea_filtered %>%
+        dplyr::filter(status == "DOWN") %>%
+        dplyr::select(-status)
+    } else if (pathways == "All") {
+      gsea_filtered <- gsea_filtered %>%
+        dplyr::select(-status)
     }
 
-      return(gsea_filtered)
+    return(gsea_filtered)
   }
-  
-  gsea_plot <-function(gsea_data, p_thresh) {
+
+  gsea_plot <- function(gsea_data, p_thresh) {
+    p <- ggplot(gsea_data, aes(
+      x = NES,
+      y = -log10(padj)
+    )) +
+      geom_point(aes(color = padj < 1 * 10^(as.numeric(p_thresh)))) +
+      theme_bw() +
+      scale_color_manual(values = c("#F8766D", "grey")) +
+      ggtitle("NES Vs. -log10 adjusted p-value") +
+      theme(
+        legend.position = "bottom",
+        axis.text = element_text(size = 8),
+        axis.title = element_text(size = 10),
+        plot.title = element_text(size = 20)
+      ) +
+      labs(color = paste0("padj < 1 × 10^", (as.numeric(p_thresh))))
+
+    return(p)
+  }
+
+  draw_gsea_plot_table <- function(dataf, slider) {
+    df_out <- dataf[which(dataf$padj < 1 * 10^(as.numeric(slider))), ]
     
-      p <- ggplot(gsea_data, aes(x = NES,
-                  y = -log10(padj))) +
-        geom_point(aes(color =  padj < 1 * 10 ^ (as.numeric(p_thresh)))) +
-        theme_bw() +
-        scale_color_manual(values = c('#F8766D', "grey")) +
-        ggtitle("NES Vs. -log10 adjusted p-value")+
-        theme(legend.position = "bottom",
-              axis.text=element_text(size=8),
-              axis.title=element_text(size=10),
-              plot.title = element_text(size=20)) +
-        labs(color = paste0("padj < 1 × 10^", (as.numeric(p_thresh))))
-      
-      return(p)
-    }
-  
-  
+    df_out$pval <- formatC(df_out$pval, digits = -2)
+    df_out$padj <- formatC(df_out$padj, digits = -2)
+    return(df_out)
+  }
+
+
   ############### Output ####################
-  
+
   output$samp_sum_table <- renderTable(
     {
       req(input$sample_metadata)
@@ -838,7 +881,7 @@ server <- function(input, output, session) {
     },
     striped = T
   )
-  
+
   output$sample_DT <- DT::renderDataTable({
     req(input$sample_metadata)
     table <- load_sample_data()
@@ -850,7 +893,7 @@ server <- function(input, output, session) {
     }
     DT::datatable(table, options = list(orderClasses = TRUE))
   })
-  
+
   output$sample_plot <- renderPlot({
     req(input$sample_metadata)
     table <- load_sample_data()
@@ -861,7 +904,7 @@ server <- function(input, output, session) {
       )
     }
   })
-  
+
   output$count_sum_table <- renderTable(
     {
       req(input$count_file)
@@ -877,7 +920,7 @@ server <- function(input, output, session) {
     spacing = "m",
     bordered = T
   )
-  
+
   output$median_vs_var_plot <- renderPlot({
     req(input$count_file)
     table <- load_count_data()
@@ -895,8 +938,8 @@ server <- function(input, output, session) {
       )
     }
   })
-  
-  
+
+
   output$median_vs_zeros <- renderPlot({
     req(input$count_file)
     table <- load_count_data()
@@ -914,7 +957,7 @@ server <- function(input, output, session) {
       )
     }
   })
-  
+
   output$count_heatmap <- renderPlot(
     {
       req(input$count_file)
@@ -925,8 +968,8 @@ server <- function(input, output, session) {
           input$variance_slider,
           input$non_zero_slider
         )
-        
-        
+
+
         t <- "Clustered Heatmap of Counts Remaining After Filtering"
         plot_heatmap(data, t)
       }
@@ -934,7 +977,7 @@ server <- function(input, output, session) {
     height = 700,
     width = 900
   )
-  
+
   output$count_pca <- renderPlot({
     req(input$count_file)
     table <- load_count_data()
@@ -944,7 +987,7 @@ server <- function(input, output, session) {
         input$variance_slider,
         input$non_zero_slider
       )
-      
+
       if (input$pc_button == "PC vs PC" && input$PC1 != "..." && input$PC2 != "...") {
         metadata <- read.csv(file = "data/sample_metadata.csv", header = TRUE, stringsAsFactors = TRUE)
         plot_pc_v_pc(data, metadata, input$PC1, input$PC2)
@@ -954,78 +997,105 @@ server <- function(input, output, session) {
       }
     }
   })
-  
+
   output$DE_DT <- DT::renderDataTable({
     req(input$DE_file)
     table <- load_DE_data()
 
     DT::datatable(table, options = list(orderClasses = TRUE))
   })
-  
-  #' These outputs aren't really functions, so they don't get a full skeleton, 
-  #' but use the renderPlot() and renderTabel() functions to return() a plot 
+
+  #' These outputs aren't really functions, so they don't get a full skeleton,
+  #' but use the renderPlot() and renderTabel() functions to return() a plot
   #' or table object, and those will be displayed in your application.
-  output$volcano <- renderPlot({
-    req(input$DE_file)
-    df <- load_DE_data()
-    p <-volcano_plot(df,
-                     input$x_axis,
-                     input$y_axis,
-                     input$slider,
-                     input$base,
-                     input$highlight)
-    return(p)
-  }, height = 700)
-  
-  
+  output$volcano <- renderPlot(
+    {
+      req(input$DE_file)
+      df <- load_DE_data()
+      p <- volcano_plot(
+        df,
+        input$x_axis,
+        input$y_axis,
+        input$slider,
+        input$base,
+        input$highlight
+      )
+      return(p)
+    },
+    height = 700
+  )
+
+
   # Same here, just return the table as you want to see it in the web page
-  output$DE_plot_table <- renderTable({
-    req(input$DE_file)
-    table <- load_DE_data()
-    colnames(table)[1] <- "gene"
-    return(draw_DE_table(dataf = table, slider = input$slider))
-  }, striped = T)
-  
+  output$DE_plot_table <- renderTable(
+    {
+      req(input$DE_file)
+      table <- load_DE_data()
+      colnames(table)[1] <- "gene"
+      return(draw_DE_table(dataf = table, slider = input$slider))
+    },
+    striped = T
+  )
+
   output$downloadData <- downloadHandler(
-    filename = function() { 
-      paste("dataset-", Sys.Date(), ".csv", sep="")
+    filename = function() {
+      paste("dataset-", Sys.Date(), ".csv", sep = "")
     },
     content = function(file) {
       req(input$GSEA_file)
       table <- load_GSEA_data()
       filtered_data <- gsea_filter_table(table, input$GSEA_p_thresh_slider, input$pathways)
-      
+
       write.csv(filtered_data, file)
-    })
-  
+    }
+  )
+
   output$top_paths_plot <- renderPlot(
     {
       req(input$GSEA_file)
       table <- load_GSEA_data()
-      top_pathways(table, input$GSEA_slider)},
+      top_pathways(table, input$GSEA_slider)
+    },
     height = 700,
-    width = 900)
-  
-  output$gsea_table <- DT::renderDataTable({
-    req(input$GSEA_file)
-    table <- load_GSEA_data()
-    filtered_data <- gsea_filter_table(table, input$GSEA_p_thresh_slider, input$pathways)
-    
-    DT::datatable(filtered_data, 
-                  extensions = 'Buttons',
-                  options = list(
-                    orderClasses = TRUE))},
+    width = 900
+  )
+
+  output$gsea_table <- DT::renderDataTable(
+    {
+      req(input$GSEA_file)
+      table <- load_GSEA_data()
+      filtered_data <- gsea_filter_table(table, input$GSEA_p_thresh_slider, input$pathways)
+
+      DT::datatable(filtered_data,
+        extensions = "Buttons",
+        options = list(
+          orderClasses = TRUE
+        )
+      )
+    },
     height = 700,
-    width = 900)
+    width = 900
+  )
 
   output$gsea_plot <- renderPlot(
     {
       req(input$GSEA_file)
       gsea_data <- load_GSEA_data()
       gsea_plot(gsea_data, input$GSEA_thresh_plot_slider)
-    },    
+    },
     height = 700,
-    width = 900)
+    width = 900
+  )
+
+  output$gsea_plot_table <- renderTable(
+    {
+      req(input$GSEA_file)
+      table <- load_GSEA_data()
+
+      draw_gsea_plot_table(table, input$GSEA_thresh_plot_slider)
+    }, striped = T,
+    bordered = T
+  )
   
   
 }
